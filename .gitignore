@@ -1,0 +1,17 @@
+# Environment and secrets
+.env
+.env.*
+service_account.json
+
+# Local cache/artifacts
+config_cache.json
+
+# Python ignores
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+dist/
+build/
