@@ -2,6 +2,7 @@
 .env
 .env.*
 service_account.json
+credentials.json
 
 # Local cache/artifacts
 config_cache.json
