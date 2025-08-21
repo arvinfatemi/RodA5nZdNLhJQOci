@@ -209,22 +209,31 @@ class CoinbaseWSClient:
         products = list(self.products)
         gran = self.granularity
 
-        subscribe_msg = json.dumps(
-            {
+        # Advanced Trade expects single-channel subscribe messages with a 'channel' field
+        subscribe_msgs = [
+            json.dumps({
                 "type": "subscribe",
                 "product_ids": products,
-                "channels": [
-                    {"name": "ticker", "product_ids": products},
-                    {"name": "candles", "product_ids": products, "granularity": gran},
-                    {"name": "heartbeat", "product_ids": products},
-                ],
-            }
-        )
+                "channel": "ticker",
+            }),
+            json.dumps({
+                "type": "subscribe",
+                "product_ids": products,
+                "channel": "candles",
+                "granularity": gran,
+            }),
+            json.dumps({
+                "type": "subscribe",
+                "product_ids": [],  # heartbeats is a global channel
+                "channel": "heartbeats",
+            }),
+        ]
 
         def _on_open(ws):
             self.log.info("WS open; subscribing channels")
             try:
-                ws.send(subscribe_msg)
+                for msg in subscribe_msgs:
+                    ws.send(msg)
             except Exception as e:
                 self.log.error(f"Subscribe send failed: {e}")
 
@@ -289,7 +298,7 @@ class CoinbaseWSClient:
                     pass
             return
 
-        if channel == "heartbeat":
+        if channel in ("heartbeat", "heartbeats"):
             if self.on_heartbeat:
                 try:
                     self.on_heartbeat(data)
@@ -297,8 +306,12 @@ class CoinbaseWSClient:
                     pass
             return
 
-        # Other channels or unknown messages can be logged at debug level
-        self.log.debug(f"Unhandled message on channel={channel}: {data}")
+        # Log errors and subscription confirmations to help debugging
+        if channel in ("subscriptions", "error"):
+            self.log.info(f"WS meta message on channel={channel}: {data}")
+        else:
+            # Other channels or unknown messages at debug level
+            self.log.debug(f"Unhandled message on channel={channel}: {data}")
 
 
 def connect_coinbase_ws(
