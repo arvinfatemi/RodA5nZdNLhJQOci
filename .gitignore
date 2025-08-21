@@ -3,6 +3,7 @@
 .env.*
 service_account.json
 credentials.json
+token.json
 
 # Local cache/artifacts
 config_cache.json
@@ -16,3 +17,8 @@ __pycache__/
 *.egg
 dist/
 build/
+
+# Virtual environments
+.venv/
+venv/
+env/

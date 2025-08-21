@@ -84,16 +84,16 @@ def main() -> None:
         except Exception:
             pass
     def on_ticker(msg: dict):
-        print("ticker:", json.dumps(msg, separators=(",", ":")))
+        print("ticker:", json.dumps(msg, separators=(",", ":"), indent=2))
         got_ticker.set(); _mark_any()
 
     def on_candle(msg: dict):
-        print("candle:", json.dumps(msg, separators=(",", ":")))
+        print("candle:", json.dumps(msg, separators=(",", ":"), indent=2))
         got_candle.set(); _mark_any()
 
     def on_heartbeat(msg: dict):
         # Keep heartbeat concise
-        print("heartbeat:", json.dumps({k: msg.get(k) for k in ("channel", "product_id", "time", "sequence")}, separators=(",", ":")))
+        print("heartbeat:", json.dumps({k: msg.get(k) for k in ("channel", "product_id", "time", "sequence")}, separators=(",", ":"), indent=2))
         got_heartbeat.set(); _mark_any()
 
     granularity = (
