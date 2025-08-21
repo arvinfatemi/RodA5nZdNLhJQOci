@@ -1,0 +1,14 @@
+# Core configuration and environment
+python-dotenv
+
+# Google Sheets access
+gspread
+google-auth
+google-auth-oauthlib
+
+# Coinbase WebSocket (raw backend)
+websocket-client
+
+# Coinbase Advanced Trade SDK (optional; used if installed)
+coinbase-advanced-py
+
