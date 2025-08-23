@@ -23,8 +23,10 @@ The goal is to integrate **long-term accumulation (DCA)** with **short-term acti
 
 ## Phase 1 Objectives
 - connect to gsheet and fetch config
-- read market data from coinbase advanced trade API
-- 
+- read market data from coinbase advanced trade API - websocket
+- read market data from coinbase advanced trade API - rest API
+- send messages to Telegram
+- send weekly Gmail reports
 ---
 
 ## Strategy Concepts
