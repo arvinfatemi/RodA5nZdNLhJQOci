@@ -1,5 +1,6 @@
 # Core configuration and environment
-python-dotenv
+# Ensure set_key and find_dotenv behavior are available
+python-dotenv>=1.0
 
 # Google Sheets access
 gspread
@@ -12,3 +13,5 @@ websocket-client
 # Coinbase Advanced Trade SDK (optional; used if installed)
 coinbase-advanced-py
 
+# Telegram notifier
+# Uses Python stdlib (urllib); no extra package required
