@@ -19,3 +19,9 @@ coinbase-advanced-py
 # FastAPI application
 fastapi
 uvicorn[standard]
+pydantic-settings
+jinja2
+aiofiles
+
+# For HTTP requests (used by bitcoin service)
+requests

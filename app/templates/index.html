@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+<h1>BTC Trading Bot Control Panel</h1>
+<p>Choose from the available options:</p>
+
+<div class="option">
+    <h3>1. Fetch Configuration from Google Sheets</h3>
+    <p>Load trading bot configuration from your Google Sheets document.</p>
+    <button onclick="fetchConfig()">Fetch Config</button>
+    <div id="config-status" class="status" style="display:none;"></div>
+</div>
+
+<div class="option">
+    <h3>2. Start Coinbase WebSocket Connection</h3>
+    <p>Connect to Coinbase WebSocket for real-time BTC price data and candles.</p>
+    <button onclick="startWebSocket()">Start WebSocket</button>
+    <button onclick="stopWebSocket()">Stop WebSocket</button>
+    <div id="ws-status" class="status" style="display:none;"></div>
+</div>
+
+<div class="option">
+    <h3>3. Send Telegram Message</h3>
+    <p>Send a test message via Telegram bot.</p>
+    <input type="text" id="telegram-message" placeholder="Enter your message" style="width: 300px; margin-right: 10px;">
+    <button onclick="sendTelegramMessage()">Send Message</button>
+    <div id="telegram-status" class="status" style="display:none;"></div>
+</div>
+
+<div class="option">
+    <h3>4. Get Bitcoin Prices & Candles</h3>
+    <p>Fetch current Bitcoin price and historical candle data using Coinbase SDK.</p>
+    <button onclick="getBitcoinPrice()">Get Current Price</button>
+    <button onclick="getBitcoinCandles()">Get Candles (24h)</button>
+    <div id="bitcoin-status" class="status" style="display:none;"></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', path='/js/dashboard.js') }}"></script>
+{% endblock %}

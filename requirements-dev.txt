@@ -1,0 +1,16 @@
+# Development dependencies
+-r requirements.txt
+
+# Testing
+pytest
+pytest-asyncio
+httpx  # For testing FastAPI
+
+# Code quality
+black
+flake8
+isort
+mypy
+
+# Development tools  
+pre-commit
