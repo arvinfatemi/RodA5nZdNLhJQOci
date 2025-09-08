@@ -4,7 +4,7 @@ Trading decision endpoints.
 import logging
 from fastapi import APIRouter, HTTPException
 
-from app.models.trading import TradingDecisionResponse, PurchaseRecord, DCAConfig
+from app.models.trading import TradingDecisionResponse, PurchaseRecord
 from app.services.decision_maker_service import decision_maker_service
 
 logger = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ async def get_trading_decision():
         decision = await decision_maker_service.evaluate_current_market()
         purchase_history = decision_maker_service.get_purchase_history()
         
-        dca_config = decision_maker_service.get_dca_config()
+        dca_config = await decision_maker_service.get_dca_config()
         
         history_summary = {
             "total_purchases": len(purchase_history.purchases),
@@ -88,7 +88,7 @@ async def should_buy_at_price(price: float):
 async def get_dca_config():
     """Get current DCA configuration."""
     try:
-        config = decision_maker_service.get_dca_config()
+        config = await decision_maker_service.get_dca_config()
         return {
             "success": True,
             "config": config
@@ -98,16 +98,3 @@ async def get_dca_config():
         raise HTTPException(status_code=500, detail=f"Failed to get DCA config: {str(e)}")
 
 
-@router.put("/config")
-async def update_dca_config(config: DCAConfig):
-    """Update DCA configuration."""
-    try:
-        decision_maker_service.update_dca_config(config)
-        return {
-            "success": True,
-            "message": "DCA configuration updated successfully",
-            "config": config
-        }
-    except Exception as e:
-        logger.error(f"Failed to update DCA config: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to update DCA config: {str(e)}")

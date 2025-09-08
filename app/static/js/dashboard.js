@@ -99,3 +99,89 @@ async function pollWebSocketStatus() {
         console.log('Polling stopped or error:', error.message);
     }
 }
+
+async function checkPurchaseDecision() {
+    const statusId = 'decision-status';
+    showStatus(statusId, 'Analyzing market conditions...', 'loading');
+    
+    try {
+        // Step 1: Get trading decision
+        showStatus(statusId, '1/3 Getting trading decision...', 'loading');
+        const decisionData = await apiCall('/api/v1/trading/decision');
+        
+        const decision = decisionData.decision;
+        const config = decisionData.config;
+        const history = decisionData.purchase_history_summary;
+        
+        // Step 2: Get current Bitcoin price for display
+        showStatus(statusId, '2/3 Fetching current Bitcoin price...', 'loading');
+        const priceData = await apiCall('/api/v1/bitcoin/price');
+        const currentPrice = priceData.data.current_price;
+        
+        // Step 3: Send decision to Telegram
+        showStatus(statusId, '3/3 Sending decision to Telegram...', 'loading');
+        
+        const telegramMessage = formatDecisionMessage(decision, config, history, currentPrice);
+        await apiCall('/api/v1/telegram/send', {
+            method: 'POST',
+            body: JSON.stringify({ message: telegramMessage })
+        });
+        
+        // Show final result
+        const resultHtml = `
+            <div class="decision-result">
+                <strong>✅ Decision Analysis Complete!</strong><br><br>
+                <div class="decision-summary ${decision.should_buy ? 'buy-decision' : 'wait-decision'}">
+                    <strong>${decision.should_buy ? '🟢 BUY' : '🔴 WAIT'}</strong><br>
+                    ${decision.reason}
+                </div>
+                <br>
+                <strong>Current Price:</strong> $${currentPrice?.toLocaleString()}<br>
+                <strong>Config:</strong> $${config.purchase_amount_usd} at ${config.drop_percentage_threshold}% drop<br>
+                <strong>Last Purchase:</strong> $${decision.last_purchase_price?.toLocaleString() || 'None'}<br>
+                ${decision.price_drop_percentage ? `<strong>Price Change:</strong> ${decision.price_drop_percentage.toFixed(2)}%<br>` : ''}
+                <br>
+                <em>📱 Decision sent to Telegram!</em>
+            </div>
+        `;
+        
+        showStatus(statusId, resultHtml, 'success');
+        
+    } catch (error) {
+        showStatus(statusId, '<strong>❌ Error:</strong> ' + error.message, 'error');
+    }
+}
+
+function formatDecisionMessage(decision, config, history, currentPrice) {
+    const emoji = decision.should_buy ? '🟢' : '🔴';
+    const action = decision.should_buy ? 'BUY' : 'WAIT';
+    
+    let message = `🧠 **Bitcoin Trading Decision**\n\n`;
+    message += `${emoji} **${action}**\n`;
+    message += `${decision.reason}\n\n`;
+    
+    message += `💰 **Current Price:** $${currentPrice?.toLocaleString()}\n`;
+    message += `📊 **Config:** $${config.purchase_amount_usd} at ${config.drop_percentage_threshold}% drop\n`;
+    
+    if (decision.last_purchase_price) {
+        message += `📈 **Last Purchase:** $${decision.last_purchase_price.toLocaleString()}\n`;
+    }
+    
+    if (decision.price_drop_percentage) {
+        const changeEmoji = decision.price_drop_percentage > 0 ? '📉' : '📈';
+        message += `${changeEmoji} **Price Change:** ${decision.price_drop_percentage.toFixed(2)}%\n`;
+    }
+    
+    if (decision.should_buy && decision.recommended_amount_usd) {
+        message += `\n💵 **Recommended Purchase:** $${decision.recommended_amount_usd}\n`;
+    }
+    
+    message += `\n📊 **Portfolio Summary:**\n`;
+    message += `• Total Purchases: ${history.total_purchases}\n`;
+    message += `• Total Invested: $${history.total_invested_usd?.toLocaleString()}\n`;
+    message += `• Avg Price: $${history.average_price?.toLocaleString()}\n`;
+    
+    message += `\n⏰ ${new Date().toLocaleString()}`;
+    
+    return message;
+}

@@ -31,8 +31,6 @@ class DCAConfig(BaseModel):
     """Model for Dollar Cost Averaging configuration."""
     purchase_amount_usd: float
     drop_percentage_threshold: float
-    min_time_between_purchases_hours: Optional[int] = 24
-    max_purchases_per_day: Optional[int] = 1
 
 
 class TradingDecision(BaseModel):
@@ -43,7 +41,6 @@ class TradingDecision(BaseModel):
     last_purchase_price: Optional[float]
     price_drop_percentage: Optional[float]
     recommended_amount_usd: Optional[float]
-    time_since_last_purchase_hours: Optional[float]
 
 
 class TradingDecisionResponse(BaseModel):

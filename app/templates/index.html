@@ -36,6 +36,13 @@
     <button onclick="getBitcoinCandles()">Get Candles (24h)</button>
     <div id="bitcoin-status" class="status" style="display:none;"></div>
 </div>
+
+<div class="option">
+    <h3>5. Check Purchase Decision</h3>
+    <p>Analyze market conditions and determine if you should buy Bitcoin based on your DCA strategy. Sends result to Telegram.</p>
+    <button onclick="checkPurchaseDecision()" class="primary-button">🧠 Check Decision & Notify</button>
+    <div id="decision-status" class="status" style="display:none;"></div>
+</div>
 {% endblock %}
 
 {% block scripts %}

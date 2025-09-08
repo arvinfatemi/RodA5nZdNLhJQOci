@@ -3,12 +3,13 @@ Service layer for trading decision making.
 """
 import logging
 from datetime import datetime, timedelta
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 
 from app.models.trading import (
     PurchaseRecord, PurchaseHistory, DCAConfig, TradingDecision
 )
 from app.services.bitcoin_service import bitcoin_service
+from app.services.config_service import config_service
 
 logger = logging.getLogger(__name__)
 
@@ -19,12 +20,9 @@ class DecisionMakerService:
     def __init__(self):
         self.logger = logger
         self._purchase_history: List[PurchaseRecord] = []
-        self._dca_config = DCAConfig(
-            purchase_amount_usd=100.0,
-            drop_percentage_threshold=5.0,
-            min_time_between_purchases_hours=24,
-            max_purchases_per_day=1
-        )
+        self._cached_config: Optional[DCAConfig] = None
+        self._config_cache_time: Optional[datetime] = None
+        self._config_cache_duration_minutes = 30
         self._initialize_sample_history()
     
     def _initialize_sample_history(self):
@@ -77,19 +75,70 @@ class DecisionMakerService:
         self._purchase_history.append(record)
         self.logger.info(f"Added purchase record: {record.amount_usd} USD at {record.price}")
     
-    def get_dca_config(self) -> DCAConfig:
-        """Get current DCA configuration."""
-        return self._dca_config
+    def _extract_dca_config_from_sheet(self, sheet_config: Dict[str, Any]) -> DCAConfig:
+        """Extract DCA configuration from Google Sheets config."""
+        try:
+            purchase_amount = float(sheet_config.get('dca_amount_usd', 100.0))
+            drop_threshold = float(sheet_config.get('dca_drop_threshold_percent', 5.0))
+            
+            return DCAConfig(
+                purchase_amount_usd=purchase_amount,
+                drop_percentage_threshold=drop_threshold
+            )
+        except (KeyError, ValueError, TypeError) as e:
+            self.logger.warning(f"Failed to parse DCA config from sheet, using defaults: {e}")
+            return DCAConfig(
+                purchase_amount_usd=100.0,
+                drop_percentage_threshold=5.0
+            )
     
-    def update_dca_config(self, config: DCAConfig):
-        """Update DCA configuration."""
-        self._dca_config = config
-        self.logger.info(f"Updated DCA config: ${config.purchase_amount_usd} at {config.drop_percentage_threshold}% drop")
+    def _is_config_cache_valid(self) -> bool:
+        """Check if cached config is still valid (within 30 minutes)."""
+        if not self._cached_config or not self._config_cache_time:
+            return False
+        
+        age_minutes = (datetime.now() - self._config_cache_time).total_seconds() / 60
+        return age_minutes < self._config_cache_duration_minutes
+    
+    async def get_dca_config(self) -> DCAConfig:
+        """Get current DCA configuration, fetching from sheet if cache is expired."""
+        if self._is_config_cache_valid():
+            self.logger.debug("Using cached DCA config")
+            return self._cached_config
+        
+        try:
+            self.logger.info("Fetching DCA config from Google Sheets")
+            config_response = await config_service.fetch_config()
+            
+            if config_response.get('success'):
+                sheet_config = config_response['config']
+                dca_config = self._extract_dca_config_from_sheet(sheet_config)
+                
+                self._cached_config = dca_config
+                self._config_cache_time = datetime.now()
+                
+                self.logger.info(f"Updated DCA config from sheet: ${dca_config.purchase_amount_usd} at {dca_config.drop_percentage_threshold}% drop")
+                return dca_config
+            else:
+                raise Exception("Config fetch was not successful")
+                
+        except Exception as e:
+            self.logger.error(f"Failed to fetch config from sheet: {e}")
+            
+            if self._cached_config:
+                self.logger.warning("Using stale cached config due to fetch failure")
+                return self._cached_config
+            else:
+                self.logger.warning("No cached config available, using fallback defaults")
+                return DCAConfig(
+                    purchase_amount_usd=100.0,
+                    drop_percentage_threshold=5.0
+                )
     
     async def should_make_purchase(self, current_price: float) -> TradingDecision:
-        """Determine if a purchase should be made based on DCA strategy."""
+        """Determine if a purchase should be made based on DCA strategy (percentage drop only)."""
         try:
-            dca_config = self._dca_config
+            dca_config = await self.get_dca_config()
             purchase_history = self.get_purchase_history()
             
             if not purchase_history.purchases:
@@ -99,41 +148,10 @@ class DecisionMakerService:
                     current_price=current_price,
                     last_purchase_price=None,
                     price_drop_percentage=None,
-                    recommended_amount_usd=dca_config.purchase_amount_usd,
-                    time_since_last_purchase_hours=None
+                    recommended_amount_usd=dca_config.purchase_amount_usd
                 )
             
             last_purchase = max(purchase_history.purchases, key=lambda p: p.timestamp)
-            time_since_last = datetime.now() - last_purchase.timestamp
-            time_since_last_hours = time_since_last.total_seconds() / 3600
-            
-            if time_since_last_hours < dca_config.min_time_between_purchases_hours:
-                return TradingDecision(
-                    should_buy=False,
-                    reason=f"Too soon since last purchase ({time_since_last_hours:.1f}h < {dca_config.min_time_between_purchases_hours}h)",
-                    current_price=current_price,
-                    last_purchase_price=last_purchase.price,
-                    price_drop_percentage=None,
-                    recommended_amount_usd=None,
-                    time_since_last_purchase_hours=time_since_last_hours
-                )
-            
-            purchases_today = [
-                p for p in purchase_history.purchases 
-                if p.timestamp.date() == datetime.now().date()
-            ]
-            
-            if len(purchases_today) >= dca_config.max_purchases_per_day:
-                return TradingDecision(
-                    should_buy=False,
-                    reason=f"Daily purchase limit reached ({len(purchases_today)}/{dca_config.max_purchases_per_day})",
-                    current_price=current_price,
-                    last_purchase_price=last_purchase.price,
-                    price_drop_percentage=None,
-                    recommended_amount_usd=None,
-                    time_since_last_purchase_hours=time_since_last_hours
-                )
-            
             price_drop_percentage = ((last_purchase.price - current_price) / last_purchase.price) * 100
             
             if price_drop_percentage >= dca_config.drop_percentage_threshold:
@@ -143,8 +161,7 @@ class DecisionMakerService:
                     current_price=current_price,
                     last_purchase_price=last_purchase.price,
                     price_drop_percentage=price_drop_percentage,
-                    recommended_amount_usd=dca_config.purchase_amount_usd,
-                    time_since_last_purchase_hours=time_since_last_hours
+                    recommended_amount_usd=dca_config.purchase_amount_usd
                 )
             else:
                 return TradingDecision(
@@ -153,8 +170,7 @@ class DecisionMakerService:
                     current_price=current_price,
                     last_purchase_price=last_purchase.price,
                     price_drop_percentage=price_drop_percentage,
-                    recommended_amount_usd=None,
-                    time_since_last_purchase_hours=time_since_last_hours
+                    recommended_amount_usd=None
                 )
                 
         except Exception as e:
@@ -165,14 +181,13 @@ class DecisionMakerService:
                 current_price=current_price,
                 last_purchase_price=None,
                 price_drop_percentage=None,
-                recommended_amount_usd=None,
-                time_since_last_purchase_hours=None
+                recommended_amount_usd=None
             )
     
     async def evaluate_current_market(self) -> TradingDecision:
         """Evaluate current market conditions and make trading decision."""
         try:
-            price_response = await bitcoin_service.get_current_price()
+            price_response = await bitcoin_service.get_bitcoin_price()
             if not price_response['success']:
                 raise Exception("Failed to fetch current Bitcoin price")
             
@@ -188,7 +203,6 @@ class DecisionMakerService:
                 last_purchase_price=None,
                 price_drop_percentage=None,
                 recommended_amount_usd=None,
-                time_since_last_purchase_hours=None
             )
 
 

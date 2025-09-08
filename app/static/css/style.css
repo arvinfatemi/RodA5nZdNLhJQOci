@@ -61,6 +61,17 @@ button:disabled {
     cursor: not-allowed;
 }
 
+.primary-button {
+    background-color: #28a745 !important;
+    font-weight: bold;
+    font-size: 16px !important;
+    padding: 12px 24px !important;
+}
+
+.primary-button:hover {
+    background-color: #218838 !important;
+}
+
 input[type="text"] {
     padding: 8px;
     border: 1px solid #ddd;
@@ -100,6 +111,30 @@ pre {
     border-radius: 3px;
     overflow-x: auto;
     font-size: 12px;
+}
+
+.decision-result {
+    text-align: left;
+}
+
+.decision-summary {
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 16px;
+    text-align: center;
+    font-weight: bold;
+}
+
+.buy-decision {
+    background-color: #d4edda;
+    border: 2px solid #28a745;
+    color: #155724;
+}
+
+.wait-decision {
+    background-color: #f8d7da;
+    border: 2px solid #dc3545;
+    color: #721c24;
 }
 
 @media (max-width: 768px) {
