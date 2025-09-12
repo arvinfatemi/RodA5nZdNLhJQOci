@@ -11,6 +11,7 @@ from app.api.api_v1.endpoints import (
     bitcoin,
     trading,
     trading_bot,
+    metrics,
 )
 
 api_router = APIRouter()
@@ -22,3 +23,4 @@ api_router.include_router(telegram.router, tags=["telegram"])
 api_router.include_router(bitcoin.router, tags=["bitcoin"])
 api_router.include_router(trading.router, tags=["trading"])
 api_router.include_router(trading_bot.router, prefix="/bot", tags=["trading-bot"])
+api_router.include_router(metrics.router, prefix="/metrics", tags=["metrics"])

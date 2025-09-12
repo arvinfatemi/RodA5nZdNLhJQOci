@@ -3,7 +3,7 @@ API endpoints for trading bot control and monitoring.
 """
 
 import logging
-from typing import Dict, Any
+from typing import Dict, Any, Optional
 from datetime import datetime
 
 from fastapi import APIRouter, HTTPException
@@ -22,7 +22,7 @@ router = APIRouter()
 class BotControlRequest(BaseModel):
     """Request model for bot control operations."""
 
-    interval_minutes: int = 30
+    interval_minutes: Optional[int] = None  # If None, uses config value
 
 
 class ManualCheckResponse(BaseModel):
@@ -46,14 +46,24 @@ async def get_bot_status():
 
 @router.post("/start")
 async def start_bot(request: BotControlRequest):
-    """Start the trading bot with specified interval."""
+    """Start the trading bot with specified or configured interval."""
     try:
         await scheduler_service.start_scheduler(
             interval_minutes=request.interval_minutes
         )
+        
+        # Get the actual interval used (either from request or config)
+        actual_interval = request.interval_minutes
+        if actual_interval is None:
+            try:
+                dca_config = await decision_maker_service.get_dca_config()
+                actual_interval = dca_config.data_fetch_interval
+            except:
+                actual_interval = 30  # fallback
+        
         return {
             "success": True,
-            "message": f"Trading bot started with {request.interval_minutes}-minute intervals",
+            "message": f"Trading bot started with {actual_interval}-minute intervals",
             "status": scheduler_service.get_status(),
         }
     except Exception as e:
@@ -143,6 +153,7 @@ async def get_trading_history():
                     "drop_percentage_threshold": dca_config.drop_percentage_threshold,
                     "trading_enabled": dca_config.trading_enabled,
                     "max_daily_trades": dca_config.max_daily_trades,
+                    "data_fetch_interval": dca_config.data_fetch_interval,
                 },
                 "bot_status": {
                     "is_running": bot_status.is_running,

@@ -1,9 +1,9 @@
 {
-  "bot_start_time": "2025-09-12T09:44:36.902973",
+  "bot_start_time": "2025-09-12T11:32:29.704981",
   "total_uptime_seconds": 0.0,
   "lifetime_stats": {
-    "total_checks": 4,
-    "total_trades": 0,
+    "total_checks": 10,
+    "total_trades": 1,
     "total_errors": 0,
     "first_run": "2025-09-12T09:40:03.943603"
   },
@@ -11,11 +11,11 @@
   "config_changes": [],
   "created_at": "2025-09-12T09:40:03.943617",
   "is_running": false,
-  "last_update": "2025-09-12T10:46:32.633431",
+  "last_update": "2025-09-12T14:45:50.304743",
   "daily_stats": {
     "date": "2025-09-12",
-    "checks": 2,
-    "trades": 0,
+    "checks": 6,
+    "trades": 1,
     "last_error": null
   }
 }

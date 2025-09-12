@@ -30,11 +30,21 @@ class SchedulerService:
         self.start_time: Optional[datetime] = None
         self._daily_reset_time: Optional[datetime] = None
 
-    async def start_scheduler(self, interval_minutes: int = 30):
+    async def start_scheduler(self, interval_minutes: Optional[int] = None):
         """Start the background scheduler."""
         if self.scheduler and self.scheduler.running:
             self.logger.warning("Scheduler is already running")
             return
+
+        # Get interval from config if not provided
+        if interval_minutes is None:
+            try:
+                dca_config = await decision_maker_service.get_dca_config()
+                interval_minutes = dca_config.data_fetch_interval
+                self.logger.info(f"Using data_fetch_interval from config: {interval_minutes} minutes")
+            except Exception as e:
+                self.logger.warning(f"Failed to get config interval, using default 30 minutes: {e}")
+                interval_minutes = 30
 
         self.scheduler = AsyncIOScheduler()
 
@@ -196,8 +206,10 @@ class SchedulerService:
                 )
                 return
 
-            # Evaluate current market conditions
-            decision = await decision_maker_service.evaluate_current_market()
+            # Evaluate current market conditions with metrics
+            market_evaluation = await decision_maker_service.evaluate_market_with_metrics()
+            decision = market_evaluation["enhanced_decision"]
+            metrics_snapshot = market_evaluation.get("metrics_snapshot")
 
             # Execute simulated trade (handles all logic internally)
             simulated_trade = await simulated_trading_service.execute_simulated_trade(
@@ -206,15 +218,15 @@ class SchedulerService:
 
             if simulated_trade.executed:
                 self.status.total_trades_today += 1
-                # Send trade executed notification with portfolio info
+                # Send trade executed notification with portfolio info and metrics
                 purchase_history = decision_maker_service.get_purchase_history()
                 await notification_service.send_trade_executed(
-                    decision, simulated_trade, purchase_history
+                    decision, simulated_trade, purchase_history, metrics_snapshot
                 )
             else:
-                # Send skip notification
+                # Send skip notification with metrics
                 await notification_service.send_trade_skipped(
-                    decision, simulated_trade.reason, self.status.total_checks_today
+                    decision, simulated_trade.reason, self.status.total_checks_today, metrics_snapshot
                 )
 
             self.status.last_error = None

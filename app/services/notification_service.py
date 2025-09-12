@@ -8,6 +8,7 @@ from typing import Dict, Any, Optional
 from enum import Enum
 
 from app.models.trading import TradingDecision, SimulatedTrade, PurchaseHistory
+from app.models.metrics import MetricsSnapshot
 from app.services.telegram_service import telegram_service
 from app.services.persistent_storage_service import persistent_storage_service
 
@@ -25,6 +26,8 @@ class NotificationType(Enum):
     ERROR = "error"
     CONFIG_UPDATED = "config_updated"
     MANUAL_CHECK = "manual_check"
+    METRICS_SUMMARY = "metrics_summary"
+    MARKET_ALERT = "market_alert"
 
 
 class NotificationService:
@@ -39,6 +42,7 @@ class NotificationService:
         decision: TradingDecision,
         simulated_trade: SimulatedTrade,
         purchase_history: Optional[PurchaseHistory] = None,
+        metrics_snapshot: Optional[MetricsSnapshot] = None,
     ):
         """Send notification for executed trade."""
         btc_amount = decision.recommended_amount_usd / decision.current_price
@@ -60,10 +64,13 @@ class NotificationService:
             message += f"🪙 Total BTC: {purchase_history.total_btc_acquired:.8f}\n"
             message += f"💵 Avg Price: ${purchase_history.average_purchase_price:,.2f}"
 
+        # Add metrics summary (always include if available)
+        message += self._format_metrics_summary(metrics_snapshot, decision.current_price)
+
         await self._send_notification(message, NotificationType.TRADE_EXECUTED)
 
     async def send_trade_skipped(
-        self, decision: TradingDecision, reason: str, check_number: int
+        self, decision: TradingDecision, reason: str, check_number: int, metrics_snapshot: Optional[MetricsSnapshot] = None
     ):
         """Send notification for skipped trade."""
         message = self._format_trade_skipped_message(
@@ -73,6 +80,9 @@ class NotificationService:
             price_drop=decision.price_drop_percentage,
             check_number=check_number,
         )
+
+        # Add metrics summary
+        message += self._format_metrics_summary(metrics_snapshot, decision.current_price)
 
         await self._send_notification(message, NotificationType.TRADE_SKIPPED)
 
@@ -176,6 +186,60 @@ class NotificationService:
 
         await self._send_notification(message, NotificationType.MANUAL_CHECK)
 
+    async def send_metrics_summary(self, metrics_snapshot: MetricsSnapshot):
+        """Send a comprehensive metrics summary."""
+        ti = metrics_snapshot.technical_indicators
+        mc = metrics_snapshot.market_context
+
+        message = (
+            f"📊 Market Metrics Summary\n\n"
+            f"💰 Current Price: ${metrics_snapshot.current_price:,.2f}\n"
+        )
+
+        if ti:
+            message += f"\n📈 Technical Indicators:\n"
+            if ti.rsi_14:
+                rsi_status = "🔴 Overbought" if ti.rsi_14 > 70 else "🟢 Oversold" if ti.rsi_14 < 30 else "🟡 Neutral"
+                message += f"📊 RSI(14): {ti.rsi_14:.1f} {rsi_status}\n"
+            
+            if ti.atr_14 and metrics_snapshot.current_price:
+                atr_pct = (ti.atr_14 / metrics_snapshot.current_price) * 100
+                vol_status = "🔴 High" if atr_pct > 5 else "🟢 Low" if atr_pct < 2 else "🟡 Medium"
+                message += f"📉 ATR Volatility: {atr_pct:.1f}% {vol_status}\n"
+            
+            if ti.sma_20 and ti.sma_50:
+                trend_status = "🟢 Bullish" if ti.sma_20 > ti.sma_50 else "🔴 Bearish"
+                message += f"📈 SMA Trend: {trend_status}\n"
+
+        if mc:
+            message += f"\n🎯 Market Context:\n"
+            if mc.short_term_trend:
+                message += f"📅 Short-term: {mc.short_term_trend.title()}\n"
+            if mc.medium_term_trend:
+                message += f"📆 Medium-term: {mc.medium_term_trend.title()}\n"
+            if mc.volatility_regime:
+                message += f"⚡ Volatility: {mc.volatility_regime.title()}"
+
+        message += f"\n\n🕐 {metrics_snapshot.timestamp.strftime('%Y-%m-%d %H:%M:%S')}"
+
+        await self._send_notification(message, NotificationType.METRICS_SUMMARY)
+
+    async def send_market_alert(self, alert_type: str, message_details: str, metrics: Optional[MetricsSnapshot] = None):
+        """Send market-based alerts (e.g., high volatility, extreme RSI)."""
+        message = f"🚨 Market Alert: {alert_type}\n\n{message_details}"
+
+        if metrics and metrics.technical_indicators:
+            ti = metrics.technical_indicators
+            message += f"\n\n📊 Current Metrics:\n"
+            message += f"💰 Price: ${metrics.current_price:,.2f}\n"
+            if ti.rsi_14:
+                message += f"📊 RSI: {ti.rsi_14:.1f}\n"
+            if ti.atr_14 and metrics.current_price:
+                atr_pct = (ti.atr_14 / metrics.current_price) * 100
+                message += f"📉 ATR: {atr_pct:.1f}%"
+
+        await self._send_notification(message, NotificationType.MARKET_ALERT)
+
     def _format_trade_executed_message(
         self,
         amount_usd: float,
@@ -234,6 +298,39 @@ class NotificationService:
         message += f"🕐 {datetime.now().strftime('%H:%M:%S')}"
 
         return message
+
+    def _format_metrics_summary(self, metrics_snapshot: Optional[MetricsSnapshot], current_price: float) -> str:
+        """Format a concise metrics summary for all notifications."""
+        if not metrics_snapshot:
+            return ""
+        
+        summary = f"\n\n📊 Market Metrics:\n"
+        
+        # Technical indicators
+        if metrics_snapshot.technical_indicators:
+            ti = metrics_snapshot.technical_indicators
+            if ti.rsi_14:
+                rsi_status = "🔴 Overbought" if ti.rsi_14 > 70 else "🟢 Oversold" if ti.rsi_14 < 30 else "🟡 Neutral"
+                summary += f"📊 RSI: {ti.rsi_14:.1f} {rsi_status}\n"
+            
+            if ti.atr_14 and current_price:
+                atr_pct = (ti.atr_14 / current_price) * 100
+                vol_status = "🔴 High" if atr_pct > 5 else "🟢 Low" if atr_pct < 2 else "🟡 Med"
+                summary += f"📉 Volatility: {atr_pct:.1f}% {vol_status}\n"
+            
+            if ti.sma_20 and ti.sma_50:
+                trend_status = "🟢 Bullish" if ti.sma_20 > ti.sma_50 else "🔴 Bearish"
+                summary += f"📈 Trend: {trend_status}\n"
+        
+        # Market context
+        if metrics_snapshot.market_context:
+            mc = metrics_snapshot.market_context
+            if mc.short_term_trend:
+                summary += f"🎯 Short-term: {mc.short_term_trend.title()}\n"
+            if mc.market_regime:
+                summary += f"⚡ Regime: {mc.market_regime.title()}"
+        
+        return summary
 
     async def _send_notification(
         self, message: str, notification_type: NotificationType

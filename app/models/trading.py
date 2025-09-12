@@ -37,6 +37,7 @@ class DCAConfig(BaseModel):
     drop_percentage_threshold: float
     trading_enabled: bool = True
     max_daily_trades: int = 10
+    data_fetch_interval: int = 30  # minutes
 
 
 class TradingDecision(BaseModel):
