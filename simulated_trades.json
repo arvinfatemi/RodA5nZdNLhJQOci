@@ -1,0 +1,68 @@
+{
+  "trades": [
+    {
+      "timestamp": "2025-09-12T09:42:33.164997",
+      "executed": false,
+      "reason": "Decision not to buy: Price drop insufficient (-167.88% < 5.0%)",
+      "daily_trade_count": 0,
+      "decision": {
+        "should_buy": false,
+        "reason": "Price drop insufficient (-167.88% < 5.0%)",
+        "current_price": 115187.84,
+        "last_purchase_price": 43000.0,
+        "price_drop_percentage": -167.8786976744186,
+        "recommended_amount_usd": null
+      }
+    },
+    {
+      "timestamp": "2025-09-12T09:42:38.555623",
+      "executed": false,
+      "reason": "Decision not to buy: Price drop insufficient (-167.73% < 5.0%)",
+      "daily_trade_count": 0,
+      "decision": {
+        "should_buy": false,
+        "reason": "Price drop insufficient (-167.73% < 5.0%)",
+        "current_price": 115125.55,
+        "last_purchase_price": 43000.0,
+        "price_drop_percentage": -167.73383720930232,
+        "recommended_amount_usd": null
+      }
+    },
+    {
+      "timestamp": "2025-09-12T10:14:37.709114",
+      "executed": false,
+      "reason": "Decision not to buy: Price drop insufficient (-168.11% < 5.0%)",
+      "daily_trade_count": 0,
+      "decision": {
+        "should_buy": false,
+        "reason": "Price drop insufficient (-168.11% < 5.0%)",
+        "current_price": 115289.4,
+        "last_purchase_price": 43000.0,
+        "price_drop_percentage": -168.1148837209302,
+        "recommended_amount_usd": null
+      }
+    },
+    {
+      "timestamp": "2025-09-12T10:44:37.498613",
+      "executed": false,
+      "reason": "Decision not to buy: Price drop insufficient (-168.38% < 5.0%)",
+      "daily_trade_count": 0,
+      "decision": {
+        "should_buy": false,
+        "reason": "Price drop insufficient (-168.38% < 5.0%)",
+        "current_price": 115404.4,
+        "last_purchase_price": 43000.0,
+        "price_drop_percentage": -168.38232558139535,
+        "recommended_amount_usd": null
+      }
+    }
+  ],
+  "summary": {
+    "total_trades": 0,
+    "total_invested": 0.0,
+    "total_btc_acquired": 0.0,
+    "first_trade": null,
+    "last_trade": null,
+    "created_at": "2025-09-12T09:40:03.936717"
+  }
+}

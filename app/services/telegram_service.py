@@ -1,6 +1,7 @@
 """
 Service layer for Telegram messaging.
 """
+
 import logging
 from typing import Dict, Any, List
 
@@ -11,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 class TelegramService:
     """Service for managing Telegram messaging."""
-    
+
     def __init__(self):
         self.logger = logger
 
@@ -24,18 +25,18 @@ class TelegramService:
             except Exception as e:
                 self.logger.warning(f"Could not resolve chat ID automatically: {e}")
                 chat_id = None
-            
+
             result = send_telegram_message(
                 text=message,
                 chat_id=str(chat_id) if chat_id else None,
             )
-            
+
             return {
-                "success": True, 
-                "message": "Telegram message sent successfully", 
-                "result": result
+                "success": True,
+                "message": "Telegram message sent successfully",
+                "result": result,
             }
-            
+
         except Exception as e:
             self.logger.error(f"Failed to send Telegram message: {e}")
             raise Exception(f"Failed to send Telegram message: {str(e)}")

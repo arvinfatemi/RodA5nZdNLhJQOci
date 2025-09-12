@@ -1,6 +1,7 @@
 """
 Trading decision endpoints.
 """
+
 import logging
 from fastapi import APIRouter, HTTPException
 
@@ -17,28 +18,34 @@ async def get_trading_decision():
     try:
         decision = await decision_maker_service.evaluate_current_market()
         purchase_history = decision_maker_service.get_purchase_history()
-        
+
         dca_config = await decision_maker_service.get_dca_config()
-        
+
         history_summary = {
             "total_purchases": len(purchase_history.purchases),
             "total_invested_usd": purchase_history.total_invested,
             "total_btc_acquired": purchase_history.total_btc_acquired,
             "average_price": purchase_history.average_purchase_price,
             "last_purchase_price": purchase_history.last_purchase_price,
-            "last_purchase_date": purchase_history.last_purchase_timestamp.isoformat() if purchase_history.last_purchase_timestamp else None
+            "last_purchase_date": (
+                purchase_history.last_purchase_timestamp.isoformat()
+                if purchase_history.last_purchase_timestamp
+                else None
+            ),
         }
-        
+
         return TradingDecisionResponse(
             success=True,
             decision=decision,
             config=dca_config,
-            purchase_history_summary=history_summary
+            purchase_history_summary=history_summary,
         )
-        
+
     except Exception as e:
         logger.error(f"Failed to get trading decision: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get trading decision: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get trading decision: {str(e)}"
+        )
 
 
 @router.get("/history")
@@ -46,13 +53,12 @@ async def get_purchase_history():
     """Get Bitcoin purchase history."""
     try:
         history = decision_maker_service.get_purchase_history()
-        return {
-            "success": True,
-            "data": history
-        }
+        return {"success": True, "data": history}
     except Exception as e:
         logger.error(f"Failed to get purchase history: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get purchase history: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get purchase history: {str(e)}"
+        )
 
 
 @router.post("/purchase")
@@ -63,11 +69,13 @@ async def record_purchase(purchase: PurchaseRecord):
         return {
             "success": True,
             "message": "Purchase recorded successfully",
-            "purchase": purchase
+            "purchase": purchase,
         }
     except Exception as e:
         logger.error(f"Failed to record purchase: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to record purchase: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to record purchase: {str(e)}"
+        )
 
 
 @router.get("/should-buy/{price}")
@@ -75,13 +83,12 @@ async def should_buy_at_price(price: float):
     """Check if should buy at given price."""
     try:
         decision = await decision_maker_service.should_make_purchase(price)
-        return {
-            "success": True,
-            "decision": decision
-        }
+        return {"success": True, "decision": decision}
     except Exception as e:
         logger.error(f"Failed to evaluate purchase decision: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to evaluate purchase decision: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Failed to evaluate purchase decision: {str(e)}"
+        )
 
 
 @router.get("/config")
@@ -89,12 +96,9 @@ async def get_dca_config():
     """Get current DCA configuration."""
     try:
         config = await decision_maker_service.get_dca_config()
-        return {
-            "success": True,
-            "config": config
-        }
+        return {"success": True, "config": config}
     except Exception as e:
         logger.error(f"Failed to get DCA config: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get DCA config: {str(e)}")
-
-
+        raise HTTPException(
+            status_code=500, detail=f"Failed to get DCA config: {str(e)}"
+        )

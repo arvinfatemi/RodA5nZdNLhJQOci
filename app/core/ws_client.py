@@ -92,7 +92,9 @@ class CoinbaseWSClient:
         if self._thread and self._thread.is_alive():
             return
         self._stop_event.clear()
-        self._thread = threading.Thread(target=self._run, name="coinbase-ws", daemon=True)
+        self._thread = threading.Thread(
+            target=self._run, name="coinbase-ws", daemon=True
+        )
         self._thread.start()
 
     def stop(self, timeout: float = 5.0) -> None:
@@ -146,7 +148,9 @@ class CoinbaseWSClient:
         try:
             from coinbase.websocket import WSClient as CBWSClient  # type: ignore
         except Exception as e:
-            self.log.info(f"coinbase-advanced-py SDK not available or import failed: {e}")
+            self.log.info(
+                f"coinbase-advanced-py SDK not available or import failed: {e}"
+            )
             return False
 
         products = list(self.products)
@@ -175,7 +179,9 @@ class CoinbaseWSClient:
 
         try:
             # Disable auto-retries so we can close cleanly
-            self._sdk_client = CBWSClient(on_message=_on_message, on_open=_on_open, retry=False)
+            self._sdk_client = CBWSClient(
+                on_message=_on_message, on_open=_on_open, retry=False
+            )
             self._sdk_client.open()
             # Block loop until stop
             while not self._stop_event.is_set():
@@ -211,22 +217,28 @@ class CoinbaseWSClient:
 
         # Advanced Trade expects single-channel subscribe messages with a 'channel' field
         subscribe_msgs = [
-            json.dumps({
-                "type": "subscribe",
-                "product_ids": products,
-                "channel": "ticker",
-            }),
-            json.dumps({
-                "type": "subscribe",
-                "product_ids": products,
-                "channel": "candles",
-                "granularity": gran,
-            }),
-            json.dumps({
-                "type": "subscribe",
-                "product_ids": [],  # heartbeats is a global channel
-                "channel": "heartbeats",
-            }),
+            json.dumps(
+                {
+                    "type": "subscribe",
+                    "product_ids": products,
+                    "channel": "ticker",
+                }
+            ),
+            json.dumps(
+                {
+                    "type": "subscribe",
+                    "product_ids": products,
+                    "channel": "candles",
+                    "granularity": gran,
+                }
+            ),
+            json.dumps(
+                {
+                    "type": "subscribe",
+                    "product_ids": [],  # heartbeats is a global channel
+                    "channel": "heartbeats",
+                }
+            ),
         ]
 
         def _on_open(ws):

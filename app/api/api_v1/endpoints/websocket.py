@@ -1,12 +1,13 @@
 """
 API endpoints for WebSocket management.
 """
+
 from fastapi import APIRouter, HTTPException
 
 from app.models.websocket import (
-    WebSocketStartResponse, 
-    WebSocketStopResponse, 
-    WebSocketStatusResponse
+    WebSocketStartResponse,
+    WebSocketStopResponse,
+    WebSocketStatusResponse,
 )
 from app.services.websocket_service import websocket_service
 

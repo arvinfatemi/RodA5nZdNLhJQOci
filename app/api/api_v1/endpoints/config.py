@@ -1,6 +1,7 @@
 """
 API endpoints for configuration management.
 """
+
 from fastapi import APIRouter, HTTPException
 
 from app.models.config import ConfigResponse

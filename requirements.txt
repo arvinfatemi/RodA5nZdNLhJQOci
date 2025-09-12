@@ -25,3 +25,6 @@ aiofiles
 
 # For HTTP requests (used by bitcoin service)
 requests
+
+# Background task scheduling
+APScheduler

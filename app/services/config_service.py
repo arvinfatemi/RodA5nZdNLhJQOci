@@ -1,6 +1,7 @@
 """
 Service layer for configuration management.
 """
+
 import logging
 from typing import Dict, Any
 
@@ -12,7 +13,7 @@ logger = logging.getLogger(__name__)
 
 class ConfigService:
     """Service for managing application configuration."""
-    
+
     def __init__(self):
         self.logger = logger
 
@@ -25,9 +26,9 @@ class ConfigService:
                 cache_path=settings.config_cache_path,
                 use_cache_if_recent=True,
             )
-            
+
             return {"success": True, "config": config}
-            
+
         except Exception as e:
             self.logger.error(f"Failed to fetch config: {e}")
             raise Exception(f"Failed to fetch configuration: {str(e)}")

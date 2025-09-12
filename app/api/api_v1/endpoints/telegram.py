@@ -1,6 +1,7 @@
 """
 API endpoints for Telegram messaging.
 """
+
 from fastapi import APIRouter, HTTPException
 
 from app.models.telegram import TelegramMessageRequest, TelegramMessageResponse

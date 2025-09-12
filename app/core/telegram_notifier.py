@@ -68,13 +68,19 @@ def send_telegram_message(
     """
     log = logger or logging.getLogger("telegram_notifier")
     env_real_path, env_vals = _load_env_values(env_path)
-    token = token or env_vals.get("TELEGRAM_BOT_TOKEN") or os.getenv("TELEGRAM_BOT_TOKEN")
+    token = (
+        token or env_vals.get("TELEGRAM_BOT_TOKEN") or os.getenv("TELEGRAM_BOT_TOKEN")
+    )
     if not token:
         raise TelegramNotifyError("Missing Telegram bot token (TELEGRAM_BOT_TOKEN)")
 
-    chat_id = chat_id or env_vals.get("TELEGRAM_CHAT_ID") or os.getenv("TELEGRAM_CHAT_ID")
+    chat_id = (
+        chat_id or env_vals.get("TELEGRAM_CHAT_ID") or os.getenv("TELEGRAM_CHAT_ID")
+    )
     if not chat_id:
-        raise TelegramNotifyError("Missing Telegram chat id (TELEGRAM_CHAT_ID) or chat_id argument")
+        raise TelegramNotifyError(
+            "Missing Telegram chat id (TELEGRAM_CHAT_ID) or chat_id argument"
+        )
 
     url = f"{TELEGRAM_API_BASE}/bot{token}/sendMessage"
     headers = {"Content-Type": "application/json"}
@@ -103,10 +109,18 @@ def send_telegram_message(
                     try:
                         parsed = json.loads(data.decode("utf-8"))
                     except Exception:
-                        parsed = {"ok": False, "error": "non-json-response", "raw": data.decode("utf-8", "replace")}
+                        parsed = {
+                            "ok": False,
+                            "error": "non-json-response",
+                            "raw": data.decode("utf-8", "replace"),
+                        }
                     if not parsed.get("ok", False):
                         # Telegram returns ok=false with description
-                        desc = parsed.get("description") or parsed.get("error") or "unknown"
+                        desc = (
+                            parsed.get("description")
+                            or parsed.get("error")
+                            or "unknown"
+                        )
                         raise TelegramNotifyError(f"Telegram API error: {desc}")
                     results.append(parsed)
                     break  # success for this chunk
@@ -127,7 +141,9 @@ def send_telegram_message(
                 backoff = min(backoff * 2, 8.0)
         else:
             # Retries exhausted for this chunk
-            raise TelegramNotifyError(f"Failed to send Telegram message after {retries} retries: {last_err}")
+            raise TelegramNotifyError(
+                f"Failed to send Telegram message after {retries} retries: {last_err}"
+            )
 
     return results
 
@@ -139,10 +155,16 @@ def _http_get(url: str, timeout: float = 10.0) -> Dict[str, Any]:
         try:
             return json.loads(raw.decode("utf-8"))
         except Exception:
-            return {"ok": False, "error": "non-json-response", "raw": raw.decode("utf-8", "replace")}
+            return {
+                "ok": False,
+                "error": "non-json-response",
+                "raw": raw.decode("utf-8", "replace"),
+            }
 
 
-def _fetch_updates(token: str, *, timeout: float = 10.0, limit: int = 50) -> List[Dict[str, Any]]:
+def _fetch_updates(
+    token: str, *, timeout: float = 10.0, limit: int = 50
+) -> List[Dict[str, Any]]:
     # Long polling timeout is server-side seconds; we keep client timeout modest
     params = {"timeout": 0, "limit": limit}
     url = f"{TELEGRAM_API_BASE}/bot{token}/getUpdates?{parse.urlencode(params)}"
@@ -155,6 +177,7 @@ def _fetch_updates(token: str, *, timeout: float = 10.0, limit: int = 50) -> Lis
 
 def _extract_chat_candidates(updates: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     candidates: List[Dict[str, Any]] = []
+
     def _push(chat: Dict[str, Any], src: str) -> None:
         if not chat:
             return
@@ -191,7 +214,9 @@ def _choose_chat_id(
     candidates: List[Dict[str, Any]],
     *,
     prefer_username_or_title: Optional[str] = None,
-    prefer_type: Optional[str] = None,  # e.g. "private", "group", "supergroup", "channel"
+    prefer_type: Optional[
+        str
+    ] = None,  # e.g. "private", "group", "supergroup", "channel"
 ) -> Optional[int]:
     if not candidates:
         return None
@@ -266,7 +291,9 @@ def resolve_and_cache_chat_id(
         except Exception:
             pass
 
-    token = token or env_vals.get("TELEGRAM_BOT_TOKEN") or os.getenv("TELEGRAM_BOT_TOKEN")
+    token = (
+        token or env_vals.get("TELEGRAM_BOT_TOKEN") or os.getenv("TELEGRAM_BOT_TOKEN")
+    )
     if not token:
         raise TelegramNotifyError("Missing TELEGRAM_BOT_TOKEN for resolving chat id")
 
@@ -278,7 +305,9 @@ def resolve_and_cache_chat_id(
         )
     chat_id = _choose_chat_id(
         candidates,
-        prefer_username_or_title=chat_username_or_title or env_vals.get("TELEGRAM_CHAT_USERNAME") or os.getenv("TELEGRAM_CHAT_USERNAME"),
+        prefer_username_or_title=chat_username_or_title
+        or env_vals.get("TELEGRAM_CHAT_USERNAME")
+        or os.getenv("TELEGRAM_CHAT_USERNAME"),
         prefer_type=prefer_type,
     )
     if chat_id is None:
@@ -289,7 +318,9 @@ def resolve_and_cache_chat_id(
         # Use python-dotenv to update or insert the key
         set_key(env_real_path or env_path, "TELEGRAM_CHAT_ID", str(chat_id))
     except Exception as e:
-        logging.getLogger("telegram_notifier").warning(f"Failed to update {env_path}: {e}")
+        logging.getLogger("telegram_notifier").warning(
+            f"Failed to update {env_path}: {e}"
+        )
 
     return chat_id
 
@@ -304,14 +335,40 @@ if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
     p = argparse.ArgumentParser(description="Telegram Bot helper")
     p.add_argument("--chat-id", dest="chat_id", default=None, help="Target chat id")
-    p.add_argument("--token", dest="token", default=None, help="Bot token (optional; else env)")
+    p.add_argument(
+        "--token", dest="token", default=None, help="Bot token (optional; else env)"
+    )
     p.add_argument("--text", dest="text", default=None, help="Message text to send")
-    p.add_argument("--parse-mode", dest="parse_mode", default=None, help="Parse mode: MarkdownV2 or HTML")
-    p.add_argument("--silent", dest="silent", action="store_true", help="Disable notification")
-    p.add_argument("--resolve-chat-id", dest="resolve", action="store_true", help="Resolve chat id via getUpdates and update .env")
-    p.add_argument("--prefer", dest="prefer", default=None, help="Preferred chat username/title (e.g., @mychannel)")
-    p.add_argument("--prefer-type", dest="prefer_type", default=None, help="Preferred chat type: private|group|supergroup|channel")
-    p.add_argument("--env-path", dest="env_path", default=".env", help="Path to .env to update")
+    p.add_argument(
+        "--parse-mode",
+        dest="parse_mode",
+        default=None,
+        help="Parse mode: MarkdownV2 or HTML",
+    )
+    p.add_argument(
+        "--silent", dest="silent", action="store_true", help="Disable notification"
+    )
+    p.add_argument(
+        "--resolve-chat-id",
+        dest="resolve",
+        action="store_true",
+        help="Resolve chat id via getUpdates and update .env",
+    )
+    p.add_argument(
+        "--prefer",
+        dest="prefer",
+        default=None,
+        help="Preferred chat username/title (e.g., @mychannel)",
+    )
+    p.add_argument(
+        "--prefer-type",
+        dest="prefer_type",
+        default=None,
+        help="Preferred chat type: private|group|supergroup|channel",
+    )
+    p.add_argument(
+        "--env-path", dest="env_path", default=".env", help="Path to .env to update"
+    )
     args = p.parse_args()
 
     try:
@@ -334,7 +391,9 @@ if __name__ == "__main__":
             ids = [r.get("result", {}).get("message_id") for r in resp]
             print("Sent", len(resp), "message chunk(s)", "IDs:", ids)
         if not args.resolve and args.text is None:
-            print("Nothing to do. Provide --text to send or --resolve-chat-id to resolve.")
+            print(
+                "Nothing to do. Provide --text to send or --resolve-chat-id to resolve."
+            )
     except TelegramNotifyError as e:
         logging.error(str(e))
         raise SystemExit(2)
