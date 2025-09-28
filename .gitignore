@@ -8,6 +8,18 @@ token.json
 # Local cache/artifacts
 config_cache.json
 
+# Runtime data files
+bot_state.json
+notification_history.json
+simulated_trades.json
+
+# Local settings
+.claude/
+
+# Data directories
+data/
+logs/
+
 # Python ignores
 __pycache__/
 *.py[cod]

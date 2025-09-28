@@ -25,14 +25,49 @@ btc_trading_bot/
 │   ├── templates/              # Jinja2 HTML templates
 │   ├── config.py               # Configuration management
 │   └── main.py                 # FastAPI application
+├── data/                       # Data storage (ignored by git)
+│   ├── logs/                   # Application logs
+│   ├── state/                  # Runtime state files
+│   ├── history/                # Trading history
+│   ├── cache/                  # Cache files
+│   └── backups/                # Configuration backups
+├── docs/                       # Documentation
+│   ├── ARCHITECTURE.md         # Architecture overview
+│   ├── SETUP.md                # Detailed setup guide
+│   ├── CONTRIBUTING.md         # Development guide
+│   └── DEPLOYMENT.md           # Production deployment
 ├── scripts/                    # Utility scripts
+├── tools/                      # Debug utilities
 ├── tests/                      # Test modules
+├── Dockerfile                  # Docker configuration
+├── docker-compose.yml          # Docker Compose setup
 ├── requirements.txt            # Production dependencies
 ├── requirements-dev.txt        # Development dependencies
 └── pyproject.toml             # Modern Python project configuration
 ```
 
-## 🛠️ Installation
+## 🛠️ Quick Start
+
+### 🐳 Docker (Recommended)
+
+1. **Clone and setup:**
+   ```bash
+   git clone <repository-url>
+   cd btc-trading-bot
+   cp .env.example .env
+   # Edit .env with your configuration
+   ```
+
+2. **Run with Docker:**
+   ```bash
+   docker-compose up -d
+   ```
+
+3. **Access the application:**
+   - Web Dashboard: http://localhost:8000
+   - API Documentation: http://localhost:8000/docs
+
+### 🐍 Manual Installation
 
 1. **Clone the repository:**
    ```bash
@@ -57,18 +92,39 @@ btc_trading_bot/
    # Edit .env with your configuration
    ```
 
+5. **Create data directories:**
+   ```bash
+   mkdir -p data/{logs,state,history,cache,backups}
+   ```
+
 ## 🚀 Running the Application
 
-### Web Application (Recommended)
+### 🐳 Docker (Recommended)
 ```bash
-python -m app.main
-```
-Then visit: http://localhost:8000
+# Start in background
+docker-compose up -d
 
-### Legacy Menu System
+# View logs
+docker-compose logs -f
+
+# Stop application
+docker-compose down
+```
+
+### 🐍 Manual Execution
 ```bash
+# Web Application (Recommended)
+python -m app.main
+
+# Legacy Menu System
 python scripts/run_app.py
 ```
+
+### 🔗 Application URLs
+- **Web Dashboard**: http://localhost:8000
+- **API Documentation**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+- **Health Check**: http://localhost:8000/health
 
 ## 📖 API Documentation
 
@@ -80,10 +136,20 @@ Once the application is running, visit:
 
 The application uses environment variables for configuration. See `.env.example` for all available options:
 
-- **Google Sheets**: Configure sheet ID and credentials
-- **Telegram Bot**: Set bot token and chat ID
-- **Coinbase**: Optional API keys for enhanced features
+### Required Configuration
+- **Google Sheets**: Sheet ID and authentication credentials
+- **Telegram Bot**: Bot token for notifications
+
+### Optional Configuration
+- **Coinbase**: API keys for enhanced features
 - **Application**: Debug mode, host, port settings
+
+### Configuration Files
+- `.env` - Your local environment variables
+- `service_account.json` - Google Service Account credentials
+- `token.json` - OAuth token (auto-generated)
+
+For detailed setup instructions, see [docs/SETUP.md](docs/SETUP.md).
 
 ## 🧪 Testing
 

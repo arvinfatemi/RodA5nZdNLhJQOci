@@ -79,6 +79,7 @@ Uses `.env` file for configuration. Key variables:
 - **Telegram**: Uses stdlib `urllib` for bot messaging
 - **Frontend**: Jinja2 templates with static assets
 
-### Legacy Components
+### Development Tools
 - `scripts/run_app.py`: Menu-driven interface for individual component testing
-- Root-level Python files: Legacy implementations being phased out
+- `tools/`: Debugging utilities for Coinbase SDK and WebSocket inspection
+- `docs/`: Project documentation (ARCHITECTURE.md, CODE_REVIEW.md, PROJECT_STATUS.md)

@@ -1,0 +1,74 @@
+version: '3.8'
+
+services:
+  btc-trading-bot:
+    build: .
+    container_name: btc-trading-bot
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # Load from .env file (create from .env.example)
+      - DEBUG=${DEBUG:-false}
+      - HOST=0.0.0.0
+      - PORT=8000
+
+      # Google Sheets configuration
+      - GOOGLE_SHEET_ID=${GOOGLE_SHEET_ID}
+      - GOOGLE_WORKSHEET_NAME=${GOOGLE_WORKSHEET_NAME:-Sheet1}
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
+
+      # Telegram configuration
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+      - TELEGRAM_CHAT_USERNAME=${TELEGRAM_CHAT_USERNAME}
+
+      # Coinbase configuration
+      - COINBASE_CANDLES_GRANULARITY=${COINBASE_CANDLES_GRANULARITY:-30m}
+
+      # File paths (using container paths)
+      - CONFIG_CACHE_PATH=/app/data/cache/config_cache.json
+    volumes:
+      # Data persistence
+      - ./data:/app/data
+
+      # Configuration files (read-only)
+      - ./.env:/app/.env:ro
+
+      # Google Service Account (if using file-based auth)
+      - ./service_account.json:/app/service_account.json:ro
+
+      # OAuth tokens (if using OAuth)
+      - ./token.json:/app/data/cache/token.json
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - btc-bot-network
+
+  # Optional: Add a database service for production
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: btc-trading-bot-db
+  #   restart: unless-stopped
+  #   environment:
+  #     POSTGRES_DB: btc_trading_bot
+  #     POSTGRES_USER: ${DB_USER:-btc_user}
+  #     POSTGRES_PASSWORD: ${DB_PASSWORD:-change_me}
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   networks:
+  #     - btc-bot-network
+
+networks:
+  btc-bot-network:
+    driver: bridge
+
+volumes:
+  # Uncomment if using PostgreSQL
+  # postgres_data:
+  data:
+    driver: local

@@ -45,13 +45,13 @@ def run_fastapi():
     
     try:
         # Run the FastAPI application
-        subprocess.run([sys.executable, "app.py"], check=True)
+        subprocess.run([sys.executable, "-m", "app.main"], check=True)
     except KeyboardInterrupt:
         print("\nApplication stopped by user.")
     except subprocess.CalledProcessError as e:
         print(f"Error running FastAPI application: {e}")
     except FileNotFoundError:
-        print("Error: app.py not found. Make sure you're in the correct directory.")
+        print("Error: app module not found. Make sure you're in the correct directory.")
 
 def run_config_fetch():
     """Run Google Sheets config fetch"""
@@ -59,23 +59,19 @@ def run_config_fetch():
     print("-" * 60)
     
     try:
-        # Import and run config loader
-        from config_loader import read_app_config_from_sheet
+        import asyncio
         import json
-        
-        sheet_id = '1A58QwxlFcy2zJGfcPRlBLtlaoC7eundbS6DpG24nMao'
-        worksheet_name = 'Sheet1'
-        cache_path = "./config_cache.json"
-        
-        config = read_app_config_from_sheet(
-            sheet_id=sheet_id,
-            worksheet_name=worksheet_name,
-            cache_path=cache_path,
-            use_cache_if_recent=True,
-        )
-        
+        from app.services.config_service import ConfigService
+
+        async def fetch_config():
+            config_service = ConfigService()
+            config = await config_service.get_config()
+            return config
+
+        config = asyncio.run(fetch_config())
+
         print("Configuration loaded successfully:")
-        print(json.dumps(config, indent=2))
+        print(json.dumps(config.dict() if hasattr(config, 'dict') else config, indent=2))
         
     except Exception as e:
         print(f"Error fetching configuration: {e}")
@@ -87,14 +83,15 @@ def run_websocket():
     print("-" * 60)
     
     try:
-        # Run the original main.py with WebSocket only
-        subprocess.run([sys.executable, "main.py", "--ws-only"], check=True)
+        # WebSocket functionality is now integrated into the FastAPI app
+        print("WebSocket functionality is now integrated into the FastAPI application.")
+        print("Use option 1 to start the full application with WebSocket support.")
     except KeyboardInterrupt:
         print("\nWebSocket stopped by user.")
     except subprocess.CalledProcessError as e:
         print(f"Error running WebSocket: {e}")
     except FileNotFoundError:
-        print("Error: main.py not found. Make sure you're in the correct directory.")
+        print("WebSocket is now integrated into the main application.")
 
 def run_telegram():
     """Send a Telegram message"""
@@ -107,25 +104,19 @@ def run_telegram():
         return
     
     try:
-        from telegram_notifier import send_telegram_message, resolve_and_cache_chat_id
-        
-        # Try to resolve chat ID
-        try:
-            chat_id = resolve_and_cache_chat_id()
-            print(f"Using chat ID: {chat_id}")
-        except Exception as e:
-            print(f"Could not auto-resolve chat ID: {e}")
-            chat_id = None
-        
-        # Send message
-        result = send_telegram_message(
-            text=message,
-            chat_id=str(chat_id) if chat_id else None,
-        )
-        
+        import asyncio
+        from app.services.telegram_service import TelegramService
+
+        async def send_message():
+            telegram_service = TelegramService()
+            result = await telegram_service.send_message(text=message)
+            return result
+
+        result = asyncio.run(send_message())
+
         print("Message sent successfully!")
         print(f"Response: {result}")
-        
+
     except Exception as e:
         print(f"Error sending Telegram message: {e}")
 

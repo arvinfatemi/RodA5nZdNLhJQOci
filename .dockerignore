@@ -1,0 +1,68 @@
+# Version control
+.git
+.gitignore
+
+# Python cache and artifacts
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+.pytest_cache/
+.coverage
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Development and testing
+tests/
+.pytest_cache/
+.coverage
+.coveragerc
+
+# Documentation build
+docs/_build/
+
+# Local environment and secrets
+.env.local
+.env.*.local
+
+# Cache and temporary files
+*.log
+*.tmp
+temp/
+
+# Runtime data (should be mounted as volumes)
+data/
+logs/
+bot_state.json
+notification_history.json
+simulated_trades.json
+config_cache.json
+
+# Local development files
+project_details
+.claude/
+
+# Docker files (no need to copy into container)
+Dockerfile*
+docker-compose*.yml
+.dockerignore
+
+# README and docs (keep essential ones, exclude others)
+docs/
+README.md
