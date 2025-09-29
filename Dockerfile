@@ -50,7 +50,6 @@ RUN mkdir -p data/logs data/state data/history data/cache data/backups && \
 # Copy application code
 COPY --chown=appuser:appuser app/ ./app/
 COPY --chown=appuser:appuser scripts/ ./scripts/
-COPY --chown=appuser:appuser .env.example ./
 
 # Switch to non-root user
 USER appuser

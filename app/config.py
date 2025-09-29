@@ -15,7 +15,8 @@ class Settings(BaseSettings):
     debug: bool = False
     host: str = "0.0.0.0"
     port: int = 8000
-
+    log_level: str = "info"
+    
     # Google Sheets settings
     google_sheet_id: str = "1A58QwxlFcy2zJGfcPRlBLtlaoC7eundbS6DpG24nMao"
     google_worksheet_name: str = "Sheet1"

@@ -8,6 +8,8 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
+from app.config import settings
+
 logger = logging.getLogger(__name__)
 
 
@@ -16,10 +18,22 @@ class PersistentStorageService:
 
     def __init__(
         self,
-        bot_state_file: str = "bot_state.json",
-        notification_history_file: str = "notification_history.json",
+        bot_state_file: Optional[str] = None,
+        notification_history_file: Optional[str] = None,
     ):
         self.logger = logger
+        
+        # Use data directory from config
+        if bot_state_file is None:
+            data_dir = Path(settings.config_cache_path).parent
+            data_dir.mkdir(parents=True, exist_ok=True)
+            bot_state_file = str(data_dir / "bot_state.json")
+            
+        if notification_history_file is None:
+            data_dir = Path(settings.config_cache_path).parent
+            data_dir.mkdir(parents=True, exist_ok=True)
+            notification_history_file = str(data_dir / "notification_history.json")
+            
         self.bot_state_file = Path(bot_state_file)
         self.notification_history_file = Path(notification_history_file)
         self._ensure_files_exist()

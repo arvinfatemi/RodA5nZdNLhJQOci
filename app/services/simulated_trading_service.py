@@ -8,6 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Dict, Any, List, Optional
 
+from app.config import settings
 from app.models.trading import (
     PurchaseRecord,
     TradingDecision,
@@ -22,8 +23,13 @@ logger = logging.getLogger(__name__)
 class SimulatedTradingService:
     """Service for executing and logging simulated trades."""
 
-    def __init__(self, log_file_path: str = "simulated_trades.json"):
+    def __init__(self, log_file_path: Optional[str] = None):
         self.logger = logger
+        if log_file_path is None:
+            # Use data directory from config, creating it if needed
+            data_dir = Path(settings.config_cache_path).parent
+            data_dir.mkdir(parents=True, exist_ok=True)
+            log_file_path = str(data_dir / "simulated_trades.json")
         self.log_file_path = Path(log_file_path)
         self.daily_trade_count = 0
         self._last_reset_date: Optional[str] = None
@@ -319,5 +325,19 @@ class SimulatedTradingService:
             return False
 
 
-# Global service instance
-simulated_trading_service = SimulatedTradingService()
+# Global service instance (lazy initialization)
+class _SimulatedTradingServiceProxy:
+    """Proxy to lazily initialize the simulated trading service."""
+    
+    def __init__(self):
+        self._service: Optional[SimulatedTradingService] = None
+    
+    def _get_service(self) -> SimulatedTradingService:
+        if self._service is None:
+            self._service = SimulatedTradingService()
+        return self._service
+    
+    def __getattr__(self, name):
+        return getattr(self._get_service(), name)
+
+simulated_trading_service = _SimulatedTradingServiceProxy()
