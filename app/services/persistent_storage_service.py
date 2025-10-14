@@ -267,6 +267,15 @@ class PersistentStorageService:
             self.logger.error(f"Failed to get lifetime stats: {e}")
             return {}
 
+    def get_trading_stats(self) -> Dict[str, Any]:
+        """Get trading statistics (alias for lifetime stats for consistency)."""
+        stats = self.get_lifetime_stats()
+        return {
+            "total_checks": stats.get("total_checks", 0),
+            "executed_trades": stats.get("total_trades", 0),
+            "total_errors": stats.get("total_errors", 0),
+        }
+
     def cleanup_old_data(self, days_to_keep: int = 30):
         """Clean up old data to prevent storage files from growing too large."""
         try:

@@ -9,6 +9,7 @@ from typing import Optional
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.interval import IntervalTrigger
+from apscheduler.triggers.cron import CronTrigger
 
 from app.models.trading import TradingBotStatus
 from app.services.decision_maker_service import decision_maker_service
@@ -16,6 +17,7 @@ from app.services.telegram_service import telegram_service
 from app.services.simulated_trading_service import simulated_trading_service
 from app.services.notification_service import notification_service
 from app.services.persistent_storage_service import persistent_storage_service
+from app.services.config_service import config_service
 
 logger = logging.getLogger(__name__)
 
@@ -65,6 +67,9 @@ class SchedulerService:
             replace_existing=True,
             next_run_time=self._get_next_midnight(),
         )
+
+        # Add weekly report job (if email reports are enabled)
+        await self._schedule_weekly_report()
 
         try:
             self.scheduler.start()
@@ -272,6 +277,104 @@ class SchedulerService:
             total_checks=stats.get("total_checks", 0),
             total_trades=stats.get("executed_trades", 0),
         )
+
+    async def _schedule_weekly_report(self):
+        """Schedule weekly email report based on configuration."""
+        try:
+            # Get report configuration from Google Sheets
+            config_response = await config_service.fetch_config()
+
+            if not config_response.get("success"):
+                self.logger.warning("Could not fetch config for weekly reports, skipping")
+                return
+
+            sheet_config = config_response["config"]
+
+            # Check if email reports are enabled
+            enable_reports = sheet_config.get("enable_email_reports", True)
+            if not enable_reports:
+                self.logger.info("Email reports disabled in configuration")
+                return
+
+            # Get schedule configuration
+            report_day = sheet_config.get("report_day", "monday").lower()
+            report_time = sheet_config.get("report_time", "09:00")
+
+            # Parse time
+            try:
+                hour, minute = report_time.split(":")
+                hour = int(hour)
+                minute = int(minute)
+            except (ValueError, AttributeError):
+                self.logger.warning(f"Invalid report_time format: {report_time}, using 09:00")
+                hour, minute = 9, 0
+
+            # Map day names to cron day_of_week values
+            day_map = {
+                "monday": 0,
+                "tuesday": 1,
+                "wednesday": 2,
+                "thursday": 3,
+                "friday": 4,
+                "saturday": 5,
+                "sunday": 6,
+            }
+
+            day_of_week = day_map.get(report_day, 0)  # Default to Monday
+
+            # Schedule the job
+            self.scheduler.add_job(
+                self._send_weekly_report,
+                trigger=CronTrigger(
+                    day_of_week=day_of_week,
+                    hour=hour,
+                    minute=minute
+                ),
+                id="weekly_report",
+                replace_existing=True,
+            )
+
+            self.logger.info(
+                f"Weekly email report scheduled for {report_day.title()} at {report_time}"
+            )
+
+        except Exception as e:
+            self.logger.error(f"Failed to schedule weekly report: {e}")
+
+    async def _send_weekly_report(self):
+        """Generate and send weekly email report."""
+        try:
+            self.logger.info("Starting weekly email report generation...")
+
+            # Import here to avoid circular dependency
+            from app.services.report_service import report_service
+
+            # Send the report
+            delivery_status = await report_service.send_weekly_email_report()
+
+            if delivery_status.success:
+                self.logger.info(
+                    f"Weekly report sent successfully to {delivery_status.recipient}"
+                )
+            else:
+                self.logger.error(
+                    f"Failed to send weekly report: {delivery_status.error_message}"
+                )
+
+                # Send error notification
+                await notification_service.send_error_notification(
+                    delivery_status.error_message or "Unknown error",
+                    "Weekly Report Generation"
+                )
+
+        except Exception as e:
+            self.logger.error(f"Weekly report generation failed: {e}")
+
+            # Send error notification
+            await notification_service.send_error_notification(
+                str(e),
+                "Weekly Report Generation"
+            )
 
 
 # Global service instance

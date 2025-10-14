@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weekly Trading Report</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background-color: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .header {
+            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+            font-size: 14px;
+        }
+        .content {
+            padding: 20px;
+        }
+        .section {
+            margin-bottom: 30px;
+        }
+        .section h2 {
+            color: #1e3a8a;
+            font-size: 18px;
+            margin: 0 0 15px 0;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e5e7eb;
+        }
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        .metric-card {
+            background-color: #f9fafb;
+            padding: 15px;
+            border-radius: 6px;
+            border-left: 3px solid #3b82f6;
+        }
+        .metric-label {
+            font-size: 12px;
+            color: #6b7280;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 5px;
+        }
+        .metric-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #111827;
+        }
+        .metric-value.large {
+            font-size: 24px;
+        }
+        .positive {
+            color: #10b981;
+        }
+        .negative {
+            color: #ef4444;
+        }
+        .neutral {
+            color: #6b7280;
+        }
+        .highlight-box {
+            background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+            border: 1px solid #bae6fd;
+            border-radius: 6px;
+            padding: 20px;
+            margin: 15px 0;
+            text-align: center;
+        }
+        .highlight-box .main-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: #0c4a6e;
+            margin: 10px 0;
+        }
+        .highlight-box .sub-value {
+            font-size: 18px;
+            color: #075985;
+        }
+        .trade-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 15px;
+            background-color: #f9fafb;
+            border-radius: 4px;
+            margin-bottom: 8px;
+        }
+        .trade-row:last-child {
+            margin-bottom: 0;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .status-badge.running {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        .status-badge.stopped {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        .footer {
+            background-color: #f9fafb;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #6b7280;
+            border-top: 1px solid #e5e7eb;
+        }
+        .footer a {
+            color: #3b82f6;
+            text-decoration: none;
+        }
+        .footer a:hover {
+            text-decoration: underline;
+        }
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            background-color: #3b82f6;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin-top: 15px;
+        }
+        .btn:hover {
+            background-color: #2563eb;
+        }
+        @media only screen and (max-width: 600px) {
+            .metric-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1>📊 Weekly Trading Report</h1>
+            <p>{{ report.period_description }}</p>
+        </div>
+
+        <!-- Content -->
+        <div class="content">
+            <!-- Portfolio Performance Highlight -->
+            <div class="highlight-box">
+                <div class="metric-label">Portfolio Value</div>
+                <div class="main-value">${{ "%.2f"|format(report.portfolio_summary.current_btc_value) }}</div>
+                <div class="sub-value {% if report.portfolio_summary.unrealized_pnl >= 0 %}positive{% else %}negative{% endif %}">
+                    {{ "%+.2f"|format(report.portfolio_summary.unrealized_pnl) }} USD
+                    ({{ "%+.2f"|format(report.portfolio_summary.unrealized_pnl_percentage) }}%)
+                </div>
+            </div>
+
+            <!-- Portfolio Summary -->
+            <div class="section">
+                <h2>💼 Portfolio Summary</h2>
+                <div class="metric-grid">
+                    <div class="metric-card">
+                        <div class="metric-label">Total BTC</div>
+                        <div class="metric-value">{{ "%.8f"|format(report.portfolio_summary.total_btc) }}</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Total Invested</div>
+                        <div class="metric-value">${{ "%.2f"|format(report.portfolio_summary.total_usd_invested) }}</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Purchases</div>
+                        <div class="metric-value">{{ report.portfolio_summary.number_of_purchases }}</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Avg Entry Price</div>
+                        <div class="metric-value">${{ "%.2f"|format(report.portfolio_summary.average_entry_price) }}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Trading Activity -->
+            <div class="section">
+                <h2>📈 Trading Activity</h2>
+                <div class="metric-grid">
+                    <div class="metric-card">
+                        <div class="metric-label">Executed Trades</div>
+                        <div class="metric-value">{{ report.trading_summary.executed_trades }}</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Total Checks</div>
+                        <div class="metric-value">{{ report.trading_summary.total_checks }}</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Success Rate</div>
+                        <div class="metric-value">{{ "%.2f"|format(report.trading_summary.success_rate) }}%</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Avg Purchase Price</div>
+                        <div class="metric-value">
+                            {% if report.trading_summary.average_purchase_price %}
+                                ${{ "%.2f"|format(report.trading_summary.average_purchase_price) }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Market Performance -->
+            <div class="section">
+                <h2>📊 Market Performance</h2>
+                <div class="metric-grid">
+                    <div class="metric-card">
+                        <div class="metric-label">Week Start Price</div>
+                        <div class="metric-value">${{ "%.2f"|format(report.market_metrics.period_start_price) }}</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Week End Price</div>
+                        <div class="metric-value">${{ "%.2f"|format(report.market_metrics.period_end_price) }}</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Price Change</div>
+                        <div class="metric-value {% if report.market_metrics.price_change >= 0 %}positive{% else %}negative{% endif %}">
+                            {{ "%+.2f"|format(report.market_metrics.price_change_percentage) }}%
+                        </div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">Week High/Low</div>
+                        <div class="metric-value" style="font-size: 14px;">
+                            ${{ "%.0f"|format(report.market_metrics.period_high) }} / ${{ "%.0f"|format(report.market_metrics.period_low) }}
+                        </div>
+                    </div>
+                </div>
+
+                {% if report.market_metrics.volatility %}
+                <div class="metric-grid" style="margin-top: 15px;">
+                    <div class="metric-card">
+                        <div class="metric-label">Volatility</div>
+                        <div class="metric-value">{{ "%.2f"|format(report.market_metrics.volatility) }}%</div>
+                    </div>
+                    {% if report.market_metrics.average_rsi %}
+                    <div class="metric-card">
+                        <div class="metric-label">Avg RSI</div>
+                        <div class="metric-value">{{ "%.1f"|format(report.market_metrics.average_rsi) }}</div>
+                    </div>
+                    {% endif %}
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Performance Highlights -->
+            {% if report.performance_metrics.best_trade or report.performance_metrics.total_return %}
+            <div class="section">
+                <h2>🎯 Performance Highlights</h2>
+
+                {% if report.performance_metrics.best_trade %}
+                <div class="trade-row">
+                    <span>🟢 Best Entry</span>
+                    <span><strong>{{ report.performance_metrics.best_trade.date }}</strong> @ {{ report.performance_metrics.best_trade.price }}</span>
+                </div>
+                {% endif %}
+
+                {% if report.performance_metrics.worst_trade %}
+                <div class="trade-row">
+                    <span>🔴 Highest Entry</span>
+                    <span><strong>{{ report.performance_metrics.worst_trade.date }}</strong> @ {{ report.performance_metrics.worst_trade.price }}</span>
+                </div>
+                {% endif %}
+
+                {% if report.performance_metrics.total_return %}
+                <div class="trade-row">
+                    <span>📊 Total Return</span>
+                    <span class="{% if report.performance_metrics.total_return >= 0 %}positive{% else %}negative{% endif %}">
+                        <strong>{{ "%+.2f"|format(report.performance_metrics.total_return) }}%</strong>
+                    </span>
+                </div>
+                {% endif %}
+            </div>
+            {% endif %}
+
+            <!-- Bot Status -->
+            <div class="section">
+                <h2>🤖 Bot Status</h2>
+                <div class="trade-row">
+                    <span>Status</span>
+                    <span class="status-badge {% if report.bot_status.is_running %}running{% else %}stopped{% endif %}">
+                        {% if report.bot_status.is_running %}Running{% else %}Stopped{% endif %}
+                    </span>
+                </div>
+                <div class="trade-row">
+                    <span>Uptime</span>
+                    <span><strong>{{ "%.1f"|format(report.bot_status.uptime_days) }} days</strong></span>
+                </div>
+                {% if report.bot_status.last_error %}
+                <div class="trade-row">
+                    <span>Last Error</span>
+                    <span style="color: #ef4444; font-size: 12px;">{{ report.bot_status.last_error[:50] }}...</span>
+                </div>
+                {% endif %}
+            </div>
+
+            <!-- Call to Action -->
+            <div style="text-align: center; margin-top: 30px;">
+                <a href="http://localhost:8000" class="btn">View Dashboard</a>
+            </div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>
+                <strong>BTC Trading Bot 2.0</strong><br>
+                Powered by FastAPI | Generated on {{ report.report_generated_at.strftime('%Y-%m-%d %H:%M:%S') }}
+            </p>
+            <p style="margin-top: 10px;">
+                <a href="http://localhost:8000/docs">API Documentation</a> •
+                <a href="http://localhost:8000/api/v1/bot/status">Bot Status</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

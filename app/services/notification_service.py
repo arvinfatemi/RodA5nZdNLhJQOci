@@ -204,7 +204,7 @@ class NotificationService:
                 rsi_status = "🔴 Overbought" if ti.rsi_14 > 70 else "🟢 Oversold" if ti.rsi_14 < 30 else "🟡 Neutral"
                 message += f"📊 RSI(14): {ti.rsi_14:.1f} {rsi_status}\n"
             
-            if ti.atr_14 and metrics_snapshot.current_price:
+            if ti.atr_14 and metrics_snapshot.current_price and metrics_snapshot.current_price > 0:
                 atr_pct = (ti.atr_14 / metrics_snapshot.current_price) * 100
                 vol_status = "🔴 High" if atr_pct > 5 else "🟢 Low" if atr_pct < 2 else "🟡 Medium"
                 message += f"📉 ATR Volatility: {atr_pct:.1f}% {vol_status}\n"
@@ -236,7 +236,7 @@ class NotificationService:
             message += f"💰 Price: ${metrics.current_price:,.2f}\n"
             if ti.rsi_14:
                 message += f"📊 RSI: {ti.rsi_14:.1f}\n"
-            if ti.atr_14 and metrics.current_price:
+            if ti.atr_14 and metrics.current_price and metrics.current_price > 0:
                 atr_pct = (ti.atr_14 / metrics.current_price) * 100
                 message += f"📉 ATR: {atr_pct:.1f}%"
 
@@ -315,7 +315,7 @@ class NotificationService:
                 rsi_status = "🔴 Overbought" if ti.rsi_14 > 70 else "🟢 Oversold" if ti.rsi_14 < 30 else "🟡 Neutral"
                 summary += f"📊 RSI: {ti.rsi_14:.1f} {rsi_status}\n"
             
-            if ti.atr_14 and current_price:
+            if ti.atr_14 and current_price and current_price > 0:
                 atr_pct = (ti.atr_14 / current_price) * 100
                 vol_status = "🔴 High" if atr_pct > 5 else "🟢 Low" if atr_pct < 2 else "🟡 Med"
                 summary += f"📉 Volatility: {atr_pct:.1f}% {vol_status}\n"

@@ -344,9 +344,9 @@ def read_app_config_from_sheet(
     sheet_id: str,
     worksheet_name: str = "Config",
     *,
-    cache_path: str = "G:/Codes/bitcoin-trading-agent/config_cache.json",
+    cache_path: str = "./config_cache.json",
     use_cache_if_recent: bool = True,
-    max_age_seconds: int = 3600,  # 1 hour, aligns with “pull hourly”
+    max_age_seconds: int = 3600,  # 1 hour, aligns with "pull hourly"
     required_keys: set[str] | None = None,
     logger: logging.Logger | None = None,
 ) -> Dict[str, Any]:

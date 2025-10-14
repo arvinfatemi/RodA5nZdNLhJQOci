@@ -144,6 +144,76 @@ def send_notification_email(
     )
 
 
+def send_html_email(
+    subject: str,
+    html_body: str,
+    plain_text_body: str,
+    *,
+    smtp_host: str,
+    smtp_port: int = 587,
+    email_from: str,
+    email_password: str,
+    email_to: str,
+    use_tls: bool = True,
+) -> Dict[str, Any]:
+    """
+    Send an HTML email with plain text fallback via SMTP.
+
+    Args:
+        subject: Email subject line
+        html_body: Email body (HTML formatted)
+        plain_text_body: Plain text version (fallback)
+        smtp_host: SMTP server hostname (e.g., smtp.gmail.com)
+        smtp_port: SMTP server port (default: 587 for TLS)
+        email_from: Sender email address
+        email_password: Email password or app password
+        email_to: Recipient email address
+        use_tls: Whether to use TLS (default: True)
+
+    Returns:
+        Dict with success status and message
+
+    Raises:
+        Exception: If email sending fails
+    """
+    try:
+        # Create message with both HTML and plain text
+        msg = EmailMessage()
+        msg['Subject'] = subject
+        msg['From'] = email_from
+        msg['To'] = email_to
+
+        # Set plain text content as default
+        msg.set_content(plain_text_body)
+
+        # Add HTML alternative
+        msg.add_alternative(html_body, subtype='html')
+
+        # Connect and send
+        if use_tls:
+            with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as smtp:
+                smtp.starttls()
+                smtp.login(email_from, email_password)
+                smtp.send_message(msg)
+        else:
+            # For non-TLS (usually port 465 with SSL)
+            with smtplib.SMTP_SSL(smtp_host, smtp_port, timeout=10) as smtp:
+                smtp.login(email_from, email_password)
+                smtp.send_message(msg)
+
+        logger.info(f"HTML email sent successfully to {email_to}: {subject}")
+        return {
+            "success": True,
+            "message": "HTML email sent successfully",
+            "to": email_to,
+            "subject": subject,
+        }
+
+    except Exception as e:
+        logger.error(f"Failed to send HTML email: {e}")
+        raise Exception(f"HTML email send failed: {str(e)}")
+
+
 def validate_email_config(
     smtp_host: Optional[str] = None,
     email_from: Optional[str] = None,
