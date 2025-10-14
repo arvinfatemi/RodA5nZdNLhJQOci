@@ -16,14 +16,22 @@ services:
       # Google Sheets configuration
       - GOOGLE_SHEET_ID=${GOOGLE_SHEET_ID}
       - GOOGLE_WORKSHEET_NAME=${GOOGLE_WORKSHEET_NAME:-Sheet1}
-      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS}
+      # Optional: For private sheets, uncomment and set credentials
+      - GOOGLE_APPLICATION_CREDENTIALS=${GOOGLE_APPLICATION_CREDENTIALS:-}
 
-      # Telegram configuration
-      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
-      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID}
+      # Telegram configuration (optional)
+      - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN:-}
+      - TELEGRAM_CHAT_ID=${TELEGRAM_CHAT_ID:-}
       - TELEGRAM_CHAT_USERNAME=${TELEGRAM_CHAT_USERNAME:-}
 
-      # Coinbase configuration
+      # Email notification configuration (optional)
+      - EMAIL_SMTP_HOST=${EMAIL_SMTP_HOST:-}
+      - EMAIL_SMTP_PORT=${EMAIL_SMTP_PORT:-587}
+      - EMAIL_FROM=${EMAIL_FROM:-}
+      - EMAIL_PASSWORD=${EMAIL_PASSWORD:-}
+      - EMAIL_TO=${EMAIL_TO:-}
+
+      # Coinbase configuration (optional)
       - COINBASE_CANDLES_GRANULARITY=${COINBASE_CANDLES_GRANULARITY:-30m}
 
       # File paths (using container paths)
@@ -35,11 +43,17 @@ services:
       # Configuration files (read-only)
       - ./.env:/app/.env:ro
 
-      # Google Service Account (if using file-based auth)
-      - ./service_account.json:/app/service_account.json:ro
+      # Optional: Credential files for private sheets (comment out if not needed)
+      # For simple setup with public sheets, comment out the lines below
+      # Uncomment only if you're using private sheets with authentication
 
-      # OAuth tokens (if using OAuth)
-      - ./token.json:/app/data/cache/token.json
+      # Google Service Account (for private sheets via service account)
+      # Create this file first: cp your-credentials.json service_account.json
+      # - ./service_account.json:/app/service_account.json:ro
+
+      # OAuth tokens (for private sheets via OAuth)
+      # This file is auto-generated during OAuth flow
+      # - ./token.json:/app/data/cache/token.json
     healthcheck:
       test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health', timeout=5)"]
       interval: 30s

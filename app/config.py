@@ -33,6 +33,13 @@ class Settings(BaseSettings):
     telegram_chat_id: Optional[str] = None
     telegram_chat_username: Optional[str] = None
 
+    # Email notification settings (alternative to Telegram)
+    email_smtp_host: Optional[str] = None
+    email_smtp_port: int = 587
+    email_from: Optional[str] = None
+    email_password: Optional[str] = None
+    email_to: Optional[str] = None
+
     # File paths
     config_cache_path: str = "./config_cache.json"
 

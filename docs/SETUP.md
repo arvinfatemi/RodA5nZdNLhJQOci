@@ -1,43 +1,174 @@
 # BTC Trading Bot - Setup Guide
 
-This comprehensive guide will help you set up the BTC Trading Bot from scratch.
+This guide offers **two setup paths**:
+1. **🎓 Simple Path**: Perfect for students and learning (2 minutes)
+2. **🔐 Advanced Path**: For production deployments with private data
 
-## 📋 Prerequisites
+Choose the path that fits your needs!
+
+---
+
+## 🎓 SIMPLE SETUP (Educational Use - Recommended for Learning)
+
+**Time: 2 minutes | No external API setup required!**
+
+### What You'll Need
+- **Python**: 3.10+ (recommended: 3.12)
+- **Git**: For cloning the repository
+- **Google Sheet**: Any public Google Sheet with bot configuration
+
+### What You DON'T Need
+- ❌ No Google Cloud account
+- ❌ No service accounts or OAuth setup
+- ❌ No Telegram bot creation
+- ❌ No API keys or credentials
+
+### Step-by-Step Setup
+
+1. **Clone the repository:**
+   ```bash
+   git clone <repository-url>
+   cd btc-trading-bot
+   ```
+
+2. **Create virtual environment:**
+   ```bash
+   python -m venv .venv
+   source .venv/bin/activate  # Linux/Mac
+   # .venv\Scripts\activate  # Windows
+   ```
+
+3. **Install dependencies:**
+   ```bash
+   pip install -r requirements.txt
+   ```
+
+4. **Setup configuration:**
+   ```bash
+   cp .env.example .env
+   nano .env  # or any text editor
+   ```
+
+5. **Make your Google Sheet public:**
+   - Open your Google Sheet with bot configuration
+   - Click "Share" button (top right)
+   - Change "Restricted" to "Anyone with the link"
+   - Set permission to "Viewer"
+   - Click "Done"
+   - Copy Sheet ID from URL: `https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit`
+
+6. **Add Sheet ID to .env:**
+   ```bash
+   GOOGLE_SHEET_ID=YOUR_SHEET_ID
+   ```
+
+7. **Run the bot:**
+   ```bash
+   python -m app.main
+   ```
+
+8. **Access the dashboard:**
+   - Open http://localhost:8000 in your browser
+   - Notifications will appear in console logs
+
+**That's it! You're done.** The bot will:
+- Fetch config from your public sheet (no auth needed)
+- Log notifications to console (no Telegram/Email setup needed)
+- Work immediately without any external API setup
+
+### Docker Simple Setup (Alternative)
+
+If you prefer Docker for the simple setup:
+
+1. **Clone and configure:**
+   ```bash
+   git clone <repository-url>
+   cd btc-trading-bot
+   cp .env.example .env
+   nano .env  # Add GOOGLE_SHEET_ID only
+   ```
+
+2. **Run with Docker:**
+   ```bash
+   docker-compose -f docker-compose.simple.yml up -d
+   ```
+
+3. **View logs (notifications appear here):**
+   ```bash
+   docker-compose -f docker-compose.simple.yml logs -f
+   ```
+
+4. **Access dashboard:**
+   - Open http://localhost:8000
+
+**Total time with Docker: ~2 minutes**
+
+---
+
+## 🔐 ADVANCED SETUP (Production Use - Private Sheets & External Notifications)
+
+**For deployments requiring private sheets and external notifications**
 
 ### System Requirements
 - **Python**: 3.10+ (recommended: 3.12)
 - **Docker**: 20.10+ with Docker Compose (optional but recommended)
 - **Git**: For cloning the repository
-- **Internet Connection**: For API access to Google Sheets, Coinbase, and Telegram
+- **Internet Connection**: For API access to Google Sheets, Coinbase, and external services
 
 ### Required Accounts & API Access
-1. **Google Account**: For Google Sheets integration
-2. **Telegram Account**: For bot notifications
+1. **Google Account**: For Google Sheets integration (with Cloud Console access)
+2. **Telegram OR Email Account**: For external notifications (optional)
 3. **Coinbase Account**: (Optional) For enhanced trading data
 
 ---
 
-## 🐳 Docker Setup (Recommended)
+## 🐳 Docker Setup (Recommended for Advanced/Production)
 
-### Quick Start
-```bash
-# 1. Clone repository
-git clone <repository-url>
-cd btc-trading-bot
+### Prerequisites
+- Docker 20.10+ installed
+- Docker Compose installed
+- Credential files ready (if using private sheets)
 
-# 2. Setup environment
-cp .env.example .env
+### Setup Steps
 
-# 3. Configure (see Configuration section below)
-nano .env  # or your preferred editor
+1. **Clone repository and prepare environment:**
+   ```bash
+   git clone <repository-url>
+   cd btc-trading-bot
+   cp .env.example .env
+   ```
 
-# 4. Start application
-docker-compose up -d
+2. **Configure environment:**
+   ```bash
+   nano .env  # Add all credentials (see Configuration section below)
+   ```
 
-# 5. Access application
-# Web: http://localhost:8000
-# API: http://localhost:8000/docs
-```
+3. **Add credential files (if using private sheets):**
+   ```bash
+   # For service account auth:
+   cp /path/to/your-credentials.json service_account.json
+
+   # For Telegram or Email, configure in .env (no files needed)
+   ```
+
+4. **Edit docker-compose.yml:**
+   - Open `docker-compose.yml`
+   - Uncomment the volume mounts for credential files:
+     ```yaml
+     # Uncomment these lines:
+     - ./service_account.json:/app/service_account.json:ro
+     # or
+     - ./token.json:/app/data/cache/token.json
+     ```
+
+5. **Start application:**
+   ```bash
+   docker-compose up -d
+   ```
+
+6. **Access application:**
+   - Web: http://localhost:8000
+   - API: http://localhost:8000/docs
 
 ### Docker Management Commands
 ```bash
@@ -56,6 +187,16 @@ docker-compose up -d --build
 # Access container shell
 docker-compose exec btc-trading-bot bash
 ```
+
+### Troubleshooting Docker
+
+**Error: "No such file or directory: service_account.json"**
+- Comment out the volume mount in `docker-compose.yml` if not using service account
+- Or create an empty file: `touch service_account.json`
+
+**Notifications not showing:**
+- Check logs: `docker-compose logs -f`
+- Console notifications appear in Docker logs by default
 
 ---
 
@@ -102,7 +243,28 @@ python scripts/run_app.py
 
 ### Google Sheets Setup
 
-#### Option 1: Service Account (Recommended)
+#### Option 1: Public Sheet (Simplest - No Auth Required!)
+1. **Make your sheet public**:
+   - Open your Google Sheet
+   - Click "Share" button (top right)
+   - Change "Restricted" to "Anyone with the link"
+   - Set permission to "Viewer"
+   - Click "Done"
+
+2. **Get Sheet ID**:
+   - Copy from URL: `https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit`
+
+3. **Configure Environment**:
+   ```bash
+   # In .env file
+   GOOGLE_SHEET_ID=your_sheet_id_here
+   GOOGLE_WORKSHEET_NAME=Sheet1
+   # That's it! No other credentials needed
+   ```
+
+**Note**: The bot will automatically fetch the sheet as CSV without any authentication. Perfect for educational use or non-sensitive data.
+
+#### Option 2: Service Account (For Private Sheets)
 1. **Create Google Cloud Project**:
    - Go to [Google Cloud Console](https://console.cloud.google.com/)
    - Create new project or select existing one
@@ -136,7 +298,7 @@ python scripts/run_app.py
    GOOGLE_APPLICATION_CREDENTIALS=./service_account.json
    ```
 
-#### Option 2: OAuth (Alternative)
+#### Option 3: OAuth (Alternative for Private Sheets)
 1. **Create OAuth Credentials**:
    - In Google Cloud Console → "APIs & Services" → "Credentials"
    - Click "Create Credentials" → "OAuth 2.0 Client IDs"
@@ -151,7 +313,38 @@ python scripts/run_app.py
    GOOGLE_OAUTH_TOKEN_PATH=./data/cache/token.json
    ```
 
-### Telegram Bot Setup
+### Notification Setup (Pick One or None)
+
+The bot uses a **smart fallback chain** for notifications:
+1. Telegram (if configured)
+2. Email (if configured)
+3. Console logs (always available)
+
+#### Option 1: Console Logs (Default - No Setup Required)
+Just leave both Telegram and Email empty in `.env`. Notifications will automatically log to console.
+
+**Best for**: Learning, development, and educational use.
+
+#### Option 2: Email Notifications (Simple SMTP Setup)
+
+1. **Get Email Credentials**:
+   - **Gmail**: Generate app password at [Google Account Security](https://myaccount.google.com/apppasswords)
+   - **Outlook**: Use your regular password or app password
+   - **Other SMTP**: Get credentials from your email provider
+
+2. **Configure Environment**:
+   ```bash
+   # In .env file
+   EMAIL_SMTP_HOST=smtp.gmail.com
+   EMAIL_SMTP_PORT=587
+   EMAIL_FROM=your-bot@gmail.com
+   EMAIL_PASSWORD=your_app_password_here
+   EMAIL_TO=notifications@example.com
+   ```
+
+**Best for**: Production deployments, personal projects, scheduled reports.
+
+#### Option 3: Telegram Bot (Most Feature-Rich)
 
 1. **Create Telegram Bot**:
    - Message @BotFather on Telegram
@@ -175,6 +368,8 @@ python scripts/run_app.py
    # OR
    TELEGRAM_CHAT_USERNAME=@your_username
    ```
+
+**Best for**: Mobile alerts, real-time notifications, advanced integrations.
 
 ### Coinbase Setup (Optional)
 

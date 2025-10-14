@@ -11,6 +11,8 @@ from app.models.trading import TradingDecision, SimulatedTrade, PurchaseHistory
 from app.models.metrics import MetricsSnapshot
 from app.services.telegram_service import telegram_service
 from app.services.persistent_storage_service import persistent_storage_service
+from app.config import settings
+from app.core.email_notifier import send_notification_email, validate_email_config
 
 logger = logging.getLogger(__name__)
 
@@ -335,47 +337,83 @@ class NotificationService:
     async def _send_notification(
         self, message: str, notification_type: NotificationType
     ):
-        """Send notification and log to history."""
-        try:
-            await telegram_service.send_message(message)
+        """
+        Send notification with smart fallback chain.
 
-            # Add to in-memory history
-            self.notification_history.append(
-                {
-                    "timestamp": datetime.now().isoformat(),
-                    "type": notification_type.value,
-                    "message": message,
-                    "success": True,
-                }
+        Priority:
+            1. Telegram (if token configured)
+            2. Email (if SMTP configured)
+            3. Console log (always available)
+
+        Always logs to history regardless of delivery method.
+        """
+        delivery_method = "none"
+        success = False
+        error_message = None
+
+        # Try Telegram first
+        if settings.telegram_bot_token:
+            try:
+                await telegram_service.send_message(message)
+                delivery_method = "telegram"
+                success = True
+                self.logger.info(f"Sent {notification_type.value} via Telegram")
+            except Exception as e:
+                self.logger.warning(f"Telegram delivery failed: {e}, trying email...")
+                error_message = str(e)
+
+        # Fallback to Email
+        if not success and validate_email_config(
+            smtp_host=settings.email_smtp_host,
+            email_from=settings.email_from,
+            email_password=settings.email_password,
+            email_to=settings.email_to,
+        ):
+            try:
+                send_notification_email(
+                    text=message,
+                    smtp_host=settings.email_smtp_host,
+                    smtp_port=settings.email_smtp_port,
+                    email_from=settings.email_from,
+                    email_password=settings.email_password,
+                    email_to=settings.email_to,
+                )
+                delivery_method = "email"
+                success = True
+                self.logger.info(f"Sent {notification_type.value} via Email")
+            except Exception as e:
+                self.logger.warning(f"Email delivery failed: {e}, using console fallback...")
+                error_message = str(e)
+
+        # Final fallback: Console log
+        if not success:
+            self.logger.info(
+                f"📢 NOTIFICATION ({notification_type.value}):\n{message}"
             )
+            delivery_method = "console"
+            success = True  # Console always succeeds
 
-            # Save to persistent storage
-            persistent_storage_service.save_notification(
-                notification_type.value, message, success=True
-            )
+        # Add to in-memory history
+        history_entry = {
+            "timestamp": datetime.now().isoformat(),
+            "type": notification_type.value,
+            "message": message,
+            "delivery_method": delivery_method,
+            "success": success,
+        }
 
-            self.logger.info(f"Sent {notification_type.value} notification")
+        if error_message and delivery_method == "console":
+            history_entry["error"] = error_message
 
-        except Exception as e:
-            self.logger.error(
-                f"Failed to send {notification_type.value} notification: {e}"
-            )
+        self.notification_history.append(history_entry)
 
-            # Add failed notification to in-memory history
-            self.notification_history.append(
-                {
-                    "timestamp": datetime.now().isoformat(),
-                    "type": notification_type.value,
-                    "message": message,
-                    "success": False,
-                    "error": str(e),
-                }
-            )
-
-            # Save to persistent storage
-            persistent_storage_service.save_notification(
-                notification_type.value, message, success=False, error=str(e)
-            )
+        # Save to persistent storage
+        persistent_storage_service.save_notification(
+            notification_type.value,
+            message,
+            success=success,
+            error=error_message if not success else None,
+        )
 
     def get_notification_history(self, limit: int = 50) -> list:
         """Get recent notification history."""

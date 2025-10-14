@@ -1,10 +1,11 @@
 """
 Config loader for the Auto Trading Bot (Apziva Project)
 
-- Reads config from a Google Sheet (service account auth).
-- Enforces types & validates keys relevant to the project (DCA %, ATR, mode, intervals, toggles).
-- Caches to a local JSON file as a fallback when Sheets is unavailable.
-- Optional max_age lets you avoid hitting Sheets more than hourly.
+- Reads config from a Google Sheet with flexible authentication options
+- Supports both authenticated access (service account/OAuth) AND public sheets (no auth)
+- Enforces types & validates keys relevant to the project (DCA %, ATR, mode, intervals, toggles)
+- Caches to a local JSON file as a fallback when Sheets is unavailable
+- Optional max_age lets you avoid hitting Sheets more than hourly
 
 Sheet format (worksheet "Config" by default):
 ------------------------------------------------
@@ -25,17 +26,24 @@ Sheet format (worksheet "Config" by default):
 | report_time              | 09:00         | str  | 24h HH:MM
 | global_drawdown_pause_pct| 25            | float|
 
-Auth:
-- Use a Google service account (JSON key). Do NOT put secrets in the sheet.
-- Set one of:
+Auth (Smart Fallback):
+- Option 1 (Simple/Educational): Make sheet public → no auth needed! Just set GOOGLE_SHEET_ID
+- Option 2 (Advanced/Production): Use service account or OAuth:
     * GOOGLE_APPLICATION_CREDENTIALS=/path/to/service_account.json
-    * GCP_SERVICE_ACCOUNT_JSON='{"type":"service_account",...}'  (inline, e.g., from a secrets manager)
+    * GCP_SERVICE_ACCOUNT_JSON='{"type":"service_account",...}'  (inline)
+    * GOOGLE_OAUTH_CLIENT_SECRETS=./credentials.json (OAuth flow)
+
+The loader tries authenticated access first (if credentials present),
+then automatically falls back to public CSV export if auth fails or credentials missing.
 
 Install:
-    pip install gspread google-auth
+    Required: pip install requests
+    Optional (for auth): pip install gspread google-auth google-auth-oauthlib
 """
 
 from __future__ import annotations
+import csv
+import io
 import json
 import logging
 import os
@@ -43,11 +51,17 @@ import time
 from datetime import datetime, timedelta
 from typing import Any, Dict
 
-import gspread
-from google.oauth2.service_account import Credentials as ServiceAccountCredentials
-from google.oauth2.credentials import Credentials as UserCredentials
-from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request as GoogleRequest
+import requests
+
+try:
+    import gspread
+    from google.oauth2.service_account import Credentials as ServiceAccountCredentials
+    from google.oauth2.credentials import Credentials as UserCredentials
+    from google_auth_oauthlib.flow import InstalledAppFlow
+    from google.auth.transport.requests import Request as GoogleRequest
+    GSPREAD_AVAILABLE = True
+except ImportError:
+    GSPREAD_AVAILABLE = False
 
 DEFAULTS = {
     "budget_usd": 10_000,
@@ -92,6 +106,54 @@ SCOPES = ["https://www.googleapis.com/auth/spreadsheets.readonly"]
 
 def _now_ts() -> float:
     return time.time()
+
+
+def _has_google_credentials() -> bool:
+    """Check if any Google credentials are available."""
+    if not GSPREAD_AVAILABLE:
+        return False
+
+    # Check for inline service account JSON
+    if os.getenv("GCP_SERVICE_ACCOUNT_JSON"):
+        return True
+
+    # Check for credentials file path
+    path = os.getenv("GOOGLE_APPLICATION_CREDENTIALS")
+    if path and os.path.exists(path):
+        return True
+
+    # Check for OAuth client secrets
+    client_secrets = os.getenv("GOOGLE_OAUTH_CLIENT_SECRETS") or os.path.join(
+        os.getcwd(), "credentials.json"
+    )
+    if os.path.exists(client_secrets):
+        return True
+
+    return False
+
+
+def _fetch_public_sheet_csv(sheet_id: str, worksheet_gid: int = 0) -> list[Dict[str, str]]:
+    """
+    Fetch a public Google Sheet as CSV without authentication.
+
+    Args:
+        sheet_id: The Google Sheet ID
+        worksheet_gid: The worksheet GID (usually 0 for first sheet)
+
+    Returns:
+        List of dictionaries with sheet data (parsed CSV)
+
+    Raises:
+        requests.HTTPError: If sheet is not public or doesn't exist
+    """
+    url = f"https://docs.google.com/spreadsheets/d/{sheet_id}/export?format=csv&gid={worksheet_gid}"
+    response = requests.get(url, timeout=10)
+    response.raise_for_status()
+
+    # Parse CSV
+    csv_data = response.text
+    reader = csv.DictReader(io.StringIO(csv_data))
+    return list(reader)
 
 
 def _load_google_credentials():
@@ -195,10 +257,40 @@ def _load_google_credentials():
 
 
 def _open_worksheet(sheet_id: str, worksheet_name: str):
-    creds = _load_google_credentials()
-    gc = gspread.authorize(creds)
-    sh = gc.open_by_key(sheet_id)
-    return sh.worksheet(worksheet_name)
+    """
+    Open a Google Sheet worksheet with fallback support.
+
+    Tries authenticated access first (if credentials available),
+    then falls back to public CSV export.
+
+    Returns:
+        Worksheet object (from gspread) OR list of dicts (from CSV)
+    """
+    log = logging.getLogger("config_loader")
+
+    # Try authenticated access first if credentials are available
+    if _has_google_credentials():
+        try:
+            creds = _load_google_credentials()
+            gc = gspread.authorize(creds)
+            sh = gc.open_by_key(sheet_id)
+            return sh.worksheet(worksheet_name)
+        except Exception as e:
+            log.warning(f"Authenticated access failed: {e}, trying public CSV fallback...")
+
+    # Fallback to public CSV export
+    # Note: worksheet_name is ignored for CSV (uses gid=0 for first sheet)
+    log.info("Using public CSV export (no authentication)")
+    rows = _fetch_public_sheet_csv(sheet_id, worksheet_gid=0)
+    # Return a mock worksheet-like object that has get_all_records() method
+    class MockWorksheet:
+        def __init__(self, rows):
+            self._rows = rows
+
+        def get_all_records(self):
+            return self._rows
+
+    return MockWorksheet(rows)
 
 
 def _parse_row(key: str, value: str, declared_type: str) -> Any:

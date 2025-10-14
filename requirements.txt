@@ -1,8 +1,14 @@
 # Core configuration and environment
-# Ensure set_key and find_dotenv behavior are available
 python-dotenv>=1.0
 
-# Google Sheets access
+# =============================================================================
+# Google Sheets Access (Optional for Public Sheets)
+# =============================================================================
+# These are only required if you want to use PRIVATE Google Sheets with authentication.
+# For PUBLIC sheets, the bot uses CSV export (requires only 'requests' below).
+#
+# Simple setup (public sheets): Can skip these
+# Advanced setup (private sheets): Keep these installed
 gspread
 google-auth
 google-auth-oauthlib
