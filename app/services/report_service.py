@@ -460,7 +460,7 @@ Trading Activity
 ✅ Executed Trades: {trading.executed_trades}
 📊 Total Checks: {trading.total_checks}
 🎯 Success Rate: {trading.success_rate:.2f}%
-💵 Average Purchase: ${trading.average_purchase_price:,.2f if trading.average_purchase_price else 0}
+💵 Average Purchase: ${(trading.average_purchase_price or 0):,.2f}
 
 Market Performance
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
