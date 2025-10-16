@@ -52,7 +52,54 @@ cp .env.example .env
 nano .env  # or use any text editor
 ```
 
-### 5. Make Your Google Sheet Public
+### 5. Create Your Google Sheet
+
+You need a Google Sheet with your bot configuration. Choose the easiest option:
+
+#### Option A: Copy Template Sheet (Fastest - 30 seconds)
+
+1. **Open the template**: [BTC Trading Bot Config Template](https://docs.google.com/spreadsheets/d/1A58QwxlFcy2zJGfcPRlBLtlaoC7eundbS6DpG24nMao/edit)
+2. **Make a copy**: Click `File` → `Make a copy`
+3. **Rename** (optional): Give it a meaningful name
+4. **Done!** Skip to step 6 below
+
+#### Option B: Create From Scratch
+
+**Step 1**: Create a new Google Sheet
+
+**Step 2**: Add column headers in row 1:
+
+| A | B | C | D |
+|---|---|---|---|
+| key | value | type | notes |
+
+**Step 3**: Add these configuration rows (copy-paste directly into your sheet):
+
+| key | value | type | notes |
+|-----|-------|------|-------|
+| budget_usd | 10000 | int | Total trading budget in USD |
+| dca_drop_pct | 3 | float | Percentage drop to trigger DCA buy |
+| dca_buy_amount_usd | 500 | float | Amount to buy per DCA trigger |
+| atr_period | 14 | int | ATR calculation period (days) |
+| atr_multiplier | 1.5 | float | ATR stop loss multiplier |
+| mode | hybrid | enum | Trading mode: dca, swing, or hybrid |
+| data_fetch_interval_min | 30 | int | Minutes between data fetches |
+| enable_dca | true | bool | Enable DCA trading strategy |
+| enable_swing | true | bool | Enable swing trading strategy |
+| enable_telegram | false | bool | Enable Telegram notifications |
+| enable_email_reports | true | bool | Enable weekly email reports |
+| report_day | monday | enum | Day for weekly report (monday-sunday) |
+| report_time | 09:00 | str | Time for weekly report (HH:MM 24h) |
+| global_drawdown_pause_pct | 25 | float | Pause trading at this drawdown % |
+
+**Configuration Tips:**
+- **budget_usd**: Start with a comfortable amount for learning ($1,000-$10,000)
+- **dca_drop_pct**: 3% is conservative, 5% is moderate, 7%+ is aggressive
+- **mode**: Use `hybrid` to enable both DCA and swing strategies
+- **enable_telegram**: Set to `false` initially (we're using console logs)
+- **enable_email_reports**: Set to `true` if you configured email in step 6
+
+### 6. Make Your Google Sheet Public
 
 1. Open your Google Sheet with bot configuration
 2. Click "Share" button (top right)
@@ -61,7 +108,7 @@ nano .env  # or use any text editor
 5. Click "Done"
 6. Copy Sheet ID from URL: `https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit`
 
-### 6. Configure .env File
+### 7. Configure .env File
 
 Edit your `.env` file with the following:
 
@@ -83,13 +130,13 @@ EMAIL_TO=recipient@example.com
 - **Other Providers**: Use your SMTP server details
 - **Fallback**: Console logs always work, even if email fails
 
-### 7. Run the Bot
+### 8. Run the Bot
 
 ```bash
 python -m app.main
 ```
 
-### 8. Access the Dashboard
+### 9. Access the Dashboard
 
 Open your browser and navigate to:
 - **Web Dashboard**: http://localhost:8000
@@ -151,22 +198,6 @@ docker-compose -f docker-compose.simple.yml logs -f
 ```bash
 docker-compose -f docker-compose.simple.yml down
 ```
-
----
-
-## Google Sheet Format
-
-Your Google Sheet should have these columns:
-
-| key | value | type | notes |
-|-----|-------|------|-------|
-| budget_usd | 10000 | int | Trading budget |
-| dca_drop_pct | 3 | float | DCA trigger percentage |
-| dca_buy_amount_usd | 500 | float | DCA buy amount |
-| data_fetch_interval_min | 30 | int | Data fetch interval |
-| enable_dca | true | bool | Enable DCA trading |
-
-**See the full configuration options in the example sheet template.**
 
 ---
 

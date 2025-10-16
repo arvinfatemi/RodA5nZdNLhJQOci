@@ -229,6 +229,59 @@ python -m app.main
 
 ---
 
+### Google Sheet Configuration Format
+
+Now you need to create/configure your Google Sheet with the bot configuration.
+
+#### Quick Setup: Copy Template
+
+**Recommended**: [Copy Template Sheet](https://docs.google.com/spreadsheets/d/1A58QwxlFcy2zJGfcPRlBLtlaoC7eundbS6DpG24nMao/edit)
+- Click `File` → `Make a copy`
+- Share with your service account (see above)
+- Copy the new Sheet ID to your `.env`
+
+#### Manual Setup: Create From Scratch
+
+**Required Structure** - Your sheet must have these columns in row 1:
+
+| Column A | Column B | Column C | Column D |
+|----------|----------|----------|----------|
+| key | value | type | notes |
+
+**Configuration Parameters** - Add these rows (all 14 required):
+
+| key | value | type | notes |
+|-----|-------|------|-------|
+| budget_usd | 10000 | int | Total trading budget in USD |
+| dca_drop_pct | 3 | float | Percentage drop to trigger DCA buy |
+| dca_buy_amount_usd | 500 | float | Amount to buy per DCA trigger |
+| atr_period | 14 | int | ATR calculation period (days) |
+| atr_multiplier | 1.5 | float | ATR stop loss multiplier |
+| mode | hybrid | enum | Trading mode: dca, swing, or hybrid |
+| data_fetch_interval_min | 30 | int | Minutes between data fetches |
+| enable_dca | true | bool | Enable DCA trading strategy |
+| enable_swing | true | bool | Enable swing trading strategy |
+| enable_telegram | true | bool | Enable Telegram notifications |
+| enable_email_reports | true | bool | Enable weekly email reports |
+| report_day | monday | enum | Day for weekly report (monday-sunday) |
+| report_time | 09:00 | str | Time for weekly report (HH:MM 24h) |
+| global_drawdown_pause_pct | 25 | float | Pause trading at this drawdown % |
+
+**Parameter Details:**
+
+- **mode** values: `dca` (dollar-cost averaging only), `swing` (swing trading only), `hybrid` (both)
+- **report_day** values: `monday`, `tuesday`, `wednesday`, `thursday`, `friday`, `saturday`, `sunday`
+- **Boolean values**: `true` or `false` (lowercase)
+- **Time format**: `HH:MM` in 24-hour format (e.g., `09:00`, `14:30`, `23:00`)
+
+**Production Tips:**
+- Start with conservative values for budget and percentages
+- Monitor for 1-2 weeks before adjusting parameters
+- Enable both email reports and Telegram for redundancy
+- Set `global_drawdown_pause_pct` to prevent excessive losses
+
+---
+
 ### Telegram Notifications
 
 **Step 1**: Create Telegram Bot
