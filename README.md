@@ -33,8 +33,10 @@ btc_trading_bot/
 │   ├── cache/                  # Cache files
 │   └── backups/                # Configuration backups
 ├── docs/                       # Documentation
+│   ├── README.md               # Documentation index
+│   ├── SIMPLE_SETUP.md         # Quick 2-minute setup
+│   ├── ADVANCED_SETUP.md       # Production setup guide
 │   ├── ARCHITECTURE.md         # Architecture overview
-│   ├── SETUP.md                # Detailed setup guide
 │   ├── CONTRIBUTING.md         # Development guide
 │   └── DEPLOYMENT.md           # Production deployment
 ├── scripts/                    # Utility scripts
@@ -47,143 +49,31 @@ btc_trading_bot/
 └── pyproject.toml             # Modern Python project configuration
 ```
 
-## 🚀 Quick Start (2 Minutes!)
+## 🚀 Quick Start
 
-Perfect for students and educational use - zero external API setup needed!
+Choose your setup path based on your needs:
 
-### Simple Setup (Recommended for Learning)
+### 🎓 Simple Setup (2 Minutes)
+**Perfect for learning and testing** - zero external API setup needed!
 
-1. **Clone the repository:**
-   ```bash
-   git clone <repository-url>
-   cd btc-trading-bot
-   ```
+**[→ Follow the Simple Setup Guide](docs/SIMPLE_SETUP.md)**
 
-2. **Create virtual environment:**
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
-   pip install -r requirements.txt
-   ```
+What you get:
+- ✅ Public Google Sheets (no authentication)
+- ✅ Console-based notifications
+- ✅ Full bot functionality
+- ✅ Ready in ~2 minutes!
 
-3. **Setup configuration:**
-   ```bash
-   cp .env.example .env
-   nano .env  # Just add your Google Sheet ID (see below)
-   ```
+### 🔐 Advanced Setup
+**For production deployments** with private sheets and external notifications.
 
-4. **Make your Google Sheet public:**
-   - Open your Google Sheet with bot configuration
-   - Click "Share" button (top right)
-   - Change "Restricted" to "Anyone with the link"
-   - Set permission to "Viewer"
-   - Copy the Sheet ID from URL: `https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit`
-   - Paste it in `.env` as `GOOGLE_SHEET_ID=YOUR_SHEET_ID`
+**[→ Follow the Advanced Setup Guide](docs/ADVANCED_SETUP.md)**
 
-5. **Run the bot:**
-   ```bash
-   python -m app.main
-   ```
-
-6. **Access the application:**
-   - Web Dashboard: http://localhost:8000
-   - API Documentation: http://localhost:8000/docs
-
-**That's it!** No Google OAuth, no Telegram bot creation, no credentials needed.
-Notifications will appear in your console logs.
-
----
-
-## 🐳 Docker Setup (Alternative)
-
-### Simple Docker Setup (Recommended for Students)
-
-Perfect for learning - no credential files needed!
-
-1. **Clone and setup:**
-   ```bash
-   git clone <repository-url>
-   cd btc-trading-bot
-   cp .env.example .env
-   # Edit .env: Just add GOOGLE_SHEET_ID (public sheet)
-   ```
-
-2. **Run with simple compose file:**
-   ```bash
-   docker-compose -f docker-compose.simple.yml up -d
-   ```
-
-3. **View logs (notifications appear here):**
-   ```bash
-   docker-compose -f docker-compose.simple.yml logs -f
-   ```
-
-4. **Access the application:**
-   - Web Dashboard: http://localhost:8000
-   - API Documentation: http://localhost:8000/docs
-
-### Advanced Docker Setup (For Production)
-
-With credential files for private sheets and external notifications:
-
-1. **Clone and setup:**
-   ```bash
-   git clone <repository-url>
-   cd btc-trading-bot
-   cp .env.example .env
-   # Edit .env with all credentials
-   ```
-
-2. **Add credential files (optional):**
-   ```bash
-   # If using private sheets with service account:
-   cp your-credentials.json service_account.json
-
-   # If using Telegram or Email, configure in .env
-   ```
-
-3. **Uncomment volume mounts in docker-compose.yml:**
-   - Edit `docker-compose.yml`
-   - Uncomment the service_account.json or token.json lines if needed
-
-4. **Run with full compose file:**
-   ```bash
-   docker-compose up -d
-   ```
-
-5. **Access the application:**
-   - Web Dashboard: http://localhost:8000
-   - API Documentation: http://localhost:8000/docs
-
-### 🐍 Manual Installation
-
-1. **Clone the repository:**
-   ```bash
-   git clone <repository-url>
-   cd btc-trading-bot
-   ```
-
-2. **Create virtual environment:**
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate  # On Windows: .venv\\Scripts\\activate
-   ```
-
-3. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-4. **Set up environment variables:**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
-
-5. **Create data directories:**
-   ```bash
-   mkdir -p data/{logs,state,history,cache,backups}
-   ```
+What you get:
+- ✅ Private Google Sheets authentication
+- ✅ Telegram/Email notifications
+- ✅ Production-ready security
+- ✅ Complete in ~15-30 minutes
 
 ## 🚀 Running the Application
 
@@ -263,7 +153,9 @@ The application uses environment variables for configuration with **smart fallba
 - `service_account.json` - Optional: Google Service Account credentials
 - `token.json` - Optional: OAuth token (auto-generated)
 
-For detailed setup instructions, see [docs/SETUP.md](docs/SETUP.md).
+**For detailed setup instructions**:
+- [Simple Setup Guide](docs/SIMPLE_SETUP.md) - 2-minute educational setup
+- [Advanced Setup Guide](docs/ADVANCED_SETUP.md) - Production configuration
 
 ## 🧪 Testing
 
@@ -335,7 +227,29 @@ flake8 app/
 - `GET /bitcoin/price` - Get current Bitcoin price
 - `GET /bitcoin/candles` - Get Bitcoin candle data
 
+## 📚 Documentation
+
+Complete documentation is available in the [docs/](docs/) directory:
+
+### Getting Started
+- **[Simple Setup](docs/SIMPLE_SETUP.md)** - 2-minute setup for learning
+- **[Advanced Setup](docs/ADVANCED_SETUP.md)** - Production deployment
+
+### Development & Architecture
+- **[Architecture](docs/ARCHITECTURE.md)** - Technical overview and codebase structure
+- **[Contributing](docs/CONTRIBUTING.md)** - Developer guide and contribution workflow
+
+### Deployment
+- **[Production Deployment](docs/DEPLOYMENT.md)** - Deploy to production environments
+
+### Archive
+- **[Implementation Notes](docs/archive/)** - Historical implementation documentation
+
+**[→ View Full Documentation Index](docs/README.md)**
+
 ## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](docs/CONTRIBUTING.md) for details:
 
 1. Fork the repository
 2. Create a feature branch
@@ -347,12 +261,18 @@ flake8 app/
 
 MIT License - see LICENSE file for details.
 
-## 🔗 Links
+## 🔗 Application Links
 
-- **Documentation**: Available at `/docs` when running
-- **Health Check**: `/health` endpoint
-- **Static Assets**: `/static/` for CSS, JS, images
+When running the application:
+- **Web Dashboard**: http://localhost:8000
+- **API Documentation**: http://localhost:8000/docs
+- **ReDoc**: http://localhost:8000/redoc
+- **Health Check**: http://localhost:8000/health
 
 ---
 
 **BTC Trading Bot 2.0** - Professional trading bot with modern web architecture.
+
+Ready to get started? Choose your path:
+- 🎓 [Simple Setup (2 min)](docs/SIMPLE_SETUP.md) for learning
+- 🔐 [Advanced Setup](docs/ADVANCED_SETUP.md) for production
