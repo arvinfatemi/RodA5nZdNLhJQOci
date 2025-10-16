@@ -1,5 +1,5 @@
 # Core configuration and environment
-python-dotenv>=1.0
+python-dotenv==1.0.1
 
 # =============================================================================
 # Google Sheets Access (Optional for Public Sheets)
@@ -9,28 +9,28 @@ python-dotenv>=1.0
 #
 # Simple setup (public sheets): Can skip these
 # Advanced setup (private sheets): Keep these installed
-gspread
-google-auth
-google-auth-oauthlib
+gspread==6.1.4
+google-auth==2.36.0
+google-auth-oauthlib==1.2.1
 
 # Coinbase WebSocket (raw backend)
-websocket-client
+websocket-client==1.8.0
 
 # Coinbase Advanced Trade SDK (optional; used if installed)
-coinbase-advanced-py
+coinbase-advanced-py==1.5.0
 
 # Telegram notifier
 # Uses Python stdlib (urllib); no extra package required
 
 # FastAPI application
-fastapi
-uvicorn[standard]
-pydantic-settings
-jinja2
-aiofiles
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic-settings==2.7.1
+jinja2==3.1.5
+aiofiles==24.1.0
 
 # For HTTP requests (used by bitcoin service)
-requests
+requests==2.32.3
 
 # Background task scheduling
-APScheduler
+APScheduler==3.11.0
