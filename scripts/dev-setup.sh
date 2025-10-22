@@ -136,22 +136,13 @@ setup_venv() {
 install_dependencies() {
     print_section "Installing Dependencies"
 
-    # Install production dependencies
+    # Install dependencies
     if [[ -f "requirements.txt" ]]; then
-        print_info "Installing production dependencies..."
+        print_info "Installing dependencies..."
         $PIP_CMD install -r requirements.txt
-        print_success "Production dependencies installed"
+        print_success "Dependencies installed"
     else
         print_warning "requirements.txt not found"
-    fi
-
-    # Install development dependencies
-    if [[ -f "requirements-dev.txt" ]]; then
-        print_info "Installing development dependencies..."
-        $PIP_CMD install -r requirements-dev.txt
-        print_success "Development dependencies installed"
-    else
-        print_warning "requirements-dev.txt not found"
     fi
 }
 
@@ -193,59 +184,6 @@ setup_environment() {
         fi
     else
         print_info ".env file already exists"
-    fi
-}
-
-# Setup pre-commit hooks
-setup_pre_commit() {
-    print_section "Setting up Pre-commit Hooks"
-
-    if command_exists pre-commit; then
-        if [[ -f ".pre-commit-config.yaml" ]]; then
-            print_info "Installing pre-commit hooks..."
-            source $ACTIVATE_SCRIPT
-            pre-commit install
-            print_success "Pre-commit hooks installed"
-        else
-            print_warning ".pre-commit-config.yaml not found, skipping pre-commit setup"
-        fi
-    else
-        print_info "Installing pre-commit..."
-        $PIP_CMD install pre-commit
-
-        # Create basic pre-commit config if it doesn't exist
-        if [[ ! -f ".pre-commit-config.yaml" ]]; then
-            cat > .pre-commit-config.yaml << EOF
-repos:
-  - repo: https://github.com/psf/black
-    rev: 23.3.0
-    hooks:
-      - id: black
-        language_version: python3
-
-  - repo: https://github.com/pycqa/isort
-    rev: 5.12.0
-    hooks:
-      - id: isort
-
-  - repo: https://github.com/pycqa/flake8
-    rev: 6.0.0
-    hooks:
-      - id: flake8
-        args: [--max-line-length=88, --extend-ignore=E203]
-
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.3.0
-    hooks:
-      - id: mypy
-        additional_dependencies: [types-requests]
-EOF
-            print_success "Created .pre-commit-config.yaml"
-        fi
-
-        source $ACTIVATE_SCRIPT
-        pre-commit install
-        print_success "Pre-commit hooks installed"
     fi
 }
 
@@ -312,10 +250,7 @@ print_usage() {
     echo -e "${BOLD}Development commands:${NC}"
     echo -e "  ${BLUE}python -m app.main${NC}           # Start the application"
     echo -e "  ${BLUE}python scripts/run_app.py${NC}    # Legacy menu system"
-    echo -e "  ${BLUE}docker-compose up -d${NC}        # Run with Docker"
-    echo -e "  ${BLUE}pytest${NC}                      # Run tests"
-    echo -e "  ${BLUE}black app/${NC}                  # Format code"
-    echo -e "  ${BLUE}mypy app/${NC}                   # Type checking"
+    echo -e "  ${BLUE}docker-compose up -d${NC}         # Run with Docker"
     echo
     echo -e "${BOLD}Documentation:${NC}"
     echo -e "  ${BLUE}docs/SETUP.md${NC}              # Detailed setup guide"
@@ -340,7 +275,6 @@ main() {
     install_dependencies
     setup_directories
     setup_environment
-    setup_pre_commit
     test_installation
     run_validation
     print_usage

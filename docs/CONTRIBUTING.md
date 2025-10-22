@@ -20,9 +20,8 @@ Thank you for your interest in contributing to the BTC Trading Bot! This guide w
    source .venv/bin/activate  # Linux/Mac
    # .venv\\Scripts\\activate  # Windows
 
-   # Install all dependencies (including dev dependencies)
+   # Install dependencies
    pip install -r requirements.txt
-   pip install -r requirements-dev.txt
 
    # Create data directories
    mkdir -p data/{logs,state,history,cache,backups}
@@ -74,60 +73,6 @@ app/
 ---
 
 ## 🛠️ Development Workflow
-
-### Code Style and Quality
-
-We use several tools to maintain code quality:
-
-```bash
-# Format code
-black app/
-black scripts/
-black tests/
-
-# Sort imports
-isort app/
-isort scripts/
-isort tests/
-
-# Type checking
-mypy app/
-
-# Linting
-flake8 app/
-
-# Run all quality checks
-./scripts/check-code-quality.sh  # (create this script)
-```
-
-### Pre-commit Hooks (Recommended)
-
-```bash
-# Install pre-commit
-pip install pre-commit
-
-# Setup hooks
-pre-commit install
-
-# Run manually
-pre-commit run --all-files
-```
-
-### Running Tests
-
-```bash
-# Run all tests
-pytest
-
-# Run with coverage
-pytest --cov=app --cov-report=html
-
-# Run specific test file
-pytest tests/test_services/test_config_service.py
-
-# Run tests in watch mode (requires pytest-watch)
-ptw -- tests/
-```
 
 ### Development Server
 
@@ -187,15 +132,10 @@ refactor(config): simplify environment variable handling
    git rebase upstream/main
    ```
 
-2. **Ensure quality**
-   ```bash
-   # Run all quality checks
-   black app/ scripts/ tests/
-   isort app/ scripts/ tests/
-   mypy app/
-   flake8 app/
-   pytest
-   ```
+2. **Test your changes**
+   - Test the application manually
+   - Verify no regressions
+   - Check logs for errors
 
 3. **Create meaningful PR**
    - Clear title and description
@@ -207,61 +147,6 @@ refactor(config): simplify environment variable handling
    - Address review feedback
    - Keep PR up to date with main branch
    - Ensure CI passes
-
----
-
-## 🧪 Testing Guidelines
-
-### Test Structure
-
-```
-tests/
-├── conftest.py              # Shared fixtures
-├── unit/                    # Unit tests
-│   ├── test_models/         # Model validation tests
-│   ├── test_services/       # Service logic tests
-│   └── test_utils/          # Utility function tests
-├── integration/             # Integration tests
-│   ├── test_api/            # API endpoint tests
-│   └── test_external/       # External service tests
-└── fixtures/                # Test data fixtures
-```
-
-### Writing Tests
-
-```python
-# Example service test
-import pytest
-from unittest.mock import Mock, patch
-from app.services.telegram_service import TelegramService
-
-class TestTelegramService:
-    @pytest.fixture
-    def service(self):
-        return TelegramService()
-
-    @patch('app.services.telegram_service.urllib.request.urlopen')
-    async def test_send_message_success(self, mock_urlopen, service):
-        # Setup mock
-        mock_response = Mock()
-        mock_response.read.return_value = b'{"ok": true}'
-        mock_urlopen.return_value.__enter__.return_value = mock_response
-
-        # Test
-        result = await service.send_message("Test message")
-
-        # Assert
-        assert result is not None
-        mock_urlopen.assert_called_once()
-```
-
-### Test Coverage
-
-Aim for high test coverage:
-- **Models**: 100% - Test all validation logic
-- **Services**: 90%+ - Test business logic thoroughly
-- **API**: 85%+ - Test endpoints and error handling
-- **Utils**: 95%+ - Test utility functions
 
 ---
 
@@ -305,10 +190,7 @@ docker-compose exec btc-trading-bot bash
 2. **API Connection Issues**
    - Verify environment variables
    - Test individual services in isolation
-
-3. **Test Failures**
-   - Run tests in isolation: `pytest tests/path/to/test.py::test_function`
-   - Check for race conditions in async tests
+   - Check network connectivity
 
 ---
 
@@ -425,12 +307,6 @@ Use the issue templates:
 - [Pydantic Documentation](https://pydantic-docs.helpmanual.io/)
 - [Google Sheets API](https://developers.google.com/sheets/api)
 - [Telegram Bot API](https://core.telegram.org/bots/api)
-
-### Tools
-- [Black](https://black.readthedocs.io/) - Code formatting
-- [isort](https://isort.readthedocs.io/) - Import sorting
-- [mypy](http://mypy-lang.org/) - Type checking
-- [pytest](https://pytest.org/) - Testing framework
 
 ---
 

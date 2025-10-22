@@ -44,8 +44,7 @@ btc_trading_bot/
 ├── tests/                      # Test modules
 ├── Dockerfile                  # Docker configuration
 ├── docker-compose.yml          # Docker Compose setup
-├── requirements.txt            # Production dependencies
-├── requirements-dev.txt        # Development dependencies
+├── requirements.txt            # Dependencies
 └── pyproject.toml             # Modern Python project configuration
 ```
 
@@ -167,12 +166,6 @@ Run the comprehensive test suite:
 python test_refactored_app.py
 ```
 
-For development with testing tools:
-```bash
-pip install -r requirements-dev.txt
-pytest
-```
-
 ## 🏗️ Architecture
 
 ### Key Improvements in 2.0
@@ -194,22 +187,6 @@ pytest
 - `BitcoinService`: Bitcoin price and candles data
 
 ## 🔧 Development
-
-### Code Quality Tools
-
-```bash
-# Format code
-black app/
-
-# Sort imports  
-isort app/
-
-# Type checking
-mypy app/
-
-# Linting
-flake8 app/
-```
 
 ### Adding New Features
 

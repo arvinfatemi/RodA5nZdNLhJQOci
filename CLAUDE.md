@@ -14,25 +14,6 @@ python scripts/run_app.py
 
 # Install dependencies
 pip install -r requirements.txt
-pip install -r requirements-dev.txt
-```
-
-### Code Quality
-```bash
-# Format code
-black app/
-
-# Sort imports
-isort app/
-
-# Type checking
-mypy app/
-
-# Linting
-flake8 app/
-
-# Run tests
-pytest
 ```
 
 ## Architecture
