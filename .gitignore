@@ -20,14 +20,29 @@ data/
 logs/
 
 # Python ignores
+# Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
-*.pyo
-*.pyd
+*$py.class
+
+# C extensions
+*.so
+
+# Distribution / packaging
 *.egg-info/
 *.egg
 dist/
 build/
+
+# Testing / coverage
+.pytest_cache/
+.coverage
+htmlcov/
+.hypothesis/
+.tox/
+
+# Type checking
+.mypy_cache/
 
 # Virtual environments
 .venv/
