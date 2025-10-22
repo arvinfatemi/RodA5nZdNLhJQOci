@@ -1,7 +1,82 @@
+# =============================================================================
+# Docker Compose - Unified Configuration with Profiles
+# =============================================================================
+# This Docker Compose file supports both simple and advanced setups using profiles.
+#
+# Usage:
+#   Simple Setup (default - educational/quick start):
+#     docker-compose up -d
+#     OR
+#     docker-compose --profile simple up -d
+#
+#   Advanced Setup (production with credentials):
+#     docker-compose --profile advanced up -d
+#
+# Features by Profile:
+#   Simple:  Public Google Sheets, console logs, no credentials needed
+#   Advanced: Private Google Sheets, Telegram/Email, full authentication
+# =============================================================================
+
 version: '3.8'
 
 services:
+  # =============================================================================
+  # Simple Setup Service (Default Profile)
+  # =============================================================================
+  # Perfect for learning and testing - zero external API setup needed!
+  # - No credential files needed
+  # - Works with public Google Sheets
+  # - Notifications to console logs
+  # - Minimal configuration
+  btc-trading-bot-simple:
+    profiles: ["simple"]
+    build: .
+    container_name: btc-trading-bot-simple
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      # Application settings
+      - DEBUG=${DEBUG:-false}
+      - HOST=0.0.0.0
+      - PORT=8000
+
+      # Google Sheets configuration (public sheet only)
+      - GOOGLE_SHEET_ID=${GOOGLE_SHEET_ID}
+      - GOOGLE_WORKSHEET_NAME=${GOOGLE_WORKSHEET_NAME:-Sheet1}
+
+      # No credentials needed for public sheets!
+      # Notifications default to console logs (no setup required)
+
+      # Optional: Coinbase configuration
+      - COINBASE_CANDLES_GRANULARITY=${COINBASE_CANDLES_GRANULARITY:-30m}
+
+      # File paths
+      - CONFIG_CACHE_PATH=/app/data/cache/config_cache.json
+    volumes:
+      # Data persistence
+      - ./data:/app/data
+
+      # Configuration file
+      - ./.env:/app/.env:ro
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health', timeout=5)"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+    networks:
+      - btc-bot-network
+
+  # =============================================================================
+  # Advanced Setup Service (Advanced Profile)
+  # =============================================================================
+  # For production deployments with private sheets and external notifications
+  # - Supports private Google Sheets authentication
+  # - Telegram/Email notifications
+  # - Production-ready security
   btc-trading-bot:
+    profiles: ["advanced"]
     build: .
     container_name: btc-trading-bot
     restart: unless-stopped

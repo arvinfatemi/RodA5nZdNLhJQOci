@@ -1,5 +1,7 @@
 # Docker Setup Updates - Summary
 
+> **Note (2025-10-21)**: This document describes the historical implementation of separate Docker Compose files. As of this date, the configuration has been consolidated into a single `docker-compose.yml` file using Docker Compose profiles. See the current [README.md](../../README.md) for updated usage instructions.
+
 ## 🎯 Objective
 
 Update Docker configuration to support the simplified setup approach, allowing students to run the bot in Docker without any credential files.

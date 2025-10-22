@@ -83,17 +83,17 @@ volumes:
 ### 5. Start Application
 
 ```bash
-docker-compose up -d
+docker-compose --profile advanced up -d
 ```
 
 ### 6. Verify Deployment
 
 ```bash
 # Check status
-docker-compose ps
+docker-compose --profile advanced ps
 
 # View logs
-docker-compose logs -f
+docker-compose --profile advanced logs -f
 
 # Test health endpoint
 curl http://localhost:8000/health
@@ -411,7 +411,7 @@ services:
 ### Start Production
 
 ```bash
-docker-compose -f docker-compose.prod.yml up -d
+docker-compose --profile advanced up -d
 ```
 
 ---
@@ -467,10 +467,10 @@ docker inspect --format='{{.State.Health.Status}}' btc-trading-bot-prod
 tail -f data/logs/app.log
 
 # Docker logs
-docker-compose logs -f
+docker-compose --profile advanced logs -f
 
 # Error logs only
-docker-compose logs --tail=100 | grep ERROR
+docker-compose --profile advanced logs --tail=100 | grep ERROR
 ```
 
 ### Backups
@@ -564,7 +564,7 @@ server.quit()
 
 **Check logs**:
 ```bash
-docker-compose logs btc-trading-bot
+docker-compose --profile advanced logs btc-trading-bot
 ```
 
 **Common issues**:

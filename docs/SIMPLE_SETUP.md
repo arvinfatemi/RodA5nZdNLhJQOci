@@ -176,8 +176,14 @@ EMAIL_TO=recipient@example.com
 
 ### 2. Run with Docker
 
+The simple profile is the default, so you can use the standard command:
+
 ```bash
-docker-compose -f docker-compose.simple.yml up -d
+# Default command (runs simple profile)
+docker-compose up -d
+
+# Or explicitly specify simple profile
+docker-compose --profile simple up -d
 ```
 
 ### 3. View Logs
@@ -185,7 +191,7 @@ docker-compose -f docker-compose.simple.yml up -d
 Notifications appear in Docker logs:
 
 ```bash
-docker-compose -f docker-compose.simple.yml logs -f
+docker-compose logs -f
 ```
 
 ### 4. Access Dashboard
@@ -196,7 +202,7 @@ docker-compose -f docker-compose.simple.yml logs -f
 ### Stop Application
 
 ```bash
-docker-compose -f docker-compose.simple.yml down
+docker-compose down
 ```
 
 ---

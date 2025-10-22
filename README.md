@@ -79,28 +79,31 @@ What you get:
 
 ### 🐳 Docker (Recommended)
 
-**Simple setup:**
+**Simple setup (default):**
 ```bash
-# Start in background
-docker-compose -f docker-compose.simple.yml up -d
-
-# View logs (shows notifications)
-docker-compose -f docker-compose.simple.yml logs -f
-
-# Stop application
-docker-compose -f docker-compose.simple.yml down
-```
-
-**Advanced setup (with credentials):**
-```bash
-# Start in background
+# Start in background (simple profile is default)
 docker-compose up -d
 
-# View logs
+# Or explicitly specify simple profile
+docker-compose --profile simple up -d
+
+# View logs (shows notifications)
 docker-compose logs -f
 
 # Stop application
 docker-compose down
+```
+
+**Advanced setup (with credentials):**
+```bash
+# Start in background with advanced profile
+docker-compose --profile advanced up -d
+
+# View logs
+docker-compose --profile advanced logs -f
+
+# Stop application
+docker-compose --profile advanced down
 ```
 
 ### 🐍 Manual Execution
